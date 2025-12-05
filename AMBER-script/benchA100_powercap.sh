@@ -1,5 +1,6 @@
 #!/bin/bash -l
 #SBATCH --job-name=benchA100-powercap
+#SBATCH --reservation=powerbench-A100
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:a100:1
 #SBATCH --time=24:00:00
@@ -37,7 +38,7 @@ mkdir -p "$RESULT"
 export CUDA_VISIBLE_DEVICES=0
 nvidia-smi -i $CUDA_VISIBLE_DEVICES
 
-for ((J=100; J<=400; J+=150)); do #As in the paper the ranges for the A100 ranges from 100 to 400 Watts with a TDP of 400
+for ((J=310; J<=400; J+=15)); do #As in the paper the ranges for the A100 ranges from 100 to 400 Watts with a TDP of 400
 POWER_LIMIT=$J
 # === SET GPU POWER LIMIT ===  
 echo "SETTING GPU POWER LIMIT TO ${POWER_LIMIT}W"

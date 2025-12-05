@@ -1,5 +1,6 @@
 #!/bin/bash -l
 #SBATCH --job-name=benchA40-powercap
+#SBATCH --reservation=powerbench-A40
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:a40:1
 #SBATCH --time=24:00:00
@@ -37,7 +38,7 @@ mkdir -p "$RESULT"
 export CUDA_VISIBLE_DEVICES=0
 nvidia-smi -i $CUDA_VISIBLE_DEVICES
 
-for ((J=100; J<=300; J+=100)); do  #in the paper the range was set from 100 to 300 for the A40 with a TDP OF 300
+for ((J=100; J<=300; J+=15)); do  #in the paper the range was set from 100 to 300 for the A40 with a TDP OF 300
 POWER_LIMIT=$J
 
 # === SET GPU CLOCKS ===  

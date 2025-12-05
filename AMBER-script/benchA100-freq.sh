@@ -1,5 +1,6 @@
 #!/bin/bash -l
 #SBATCH --job-name=benchA100-freq
+#SBATCH --reservation=powerbench-A100
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:a100:1
 #SBATCH --time=24:00:00
@@ -35,18 +36,18 @@ mkdir -p "$RESULT"
 export CUDA_VISIBLE_DEVICES=0
 nvidia-smi -i $CUDA_VISIBLE_DEVICES
 
-for ((J=210; J<=1410; J+=600)); do
+for ((J=1110; J<=1410; J+=60)); do
 
 # === PARSE GPU CLOCK SETTINGS ===
 #A100 only supports 1215
 GPU_MEM_CLOCK="1215"
 GPU_GRAPHICS_CLOCK="$J"
-FREQ_TAG="1215-$J"
+FREQ_TAG="1215,$J"
 
 # === SET GPU CLOCKS ===  
 echo "SETTING GPU CLOCKS TO MEM=$GPU_MEM_CLOCK, GRAPHICS=$GPU_GRAPHICS_CLOCK"
 # example clock ref: "1215,1410"
-sudo /usr/bin/nvidia-smi --applications-clocks=$CLOCK_REF
+sudo /usr/bin/nvidia-smi --applications-clocks=$FREQ_TAG
 
 OUTDIR=$FREQ_TAG
 mkdir -p "$1/$OUTDIR"
