@@ -1,0 +1,161 @@
+### This is /var/tmp/slurmd_spool/job3209442/slurm_script
+#!/bin/bash -l
+#SBATCH --job-name=benchA100-freq
+#SBATCH --reservation=powerbench-A100
+#SBATCH --nodes=1
+#SBATCH --gres=gpu:a100:1
+#SBATCH --time=24:00:00
+
+if [ $# -ne 1 ]; then
+	echo "Usage: $0 comment-string"
+	exit 1
+fi
+
+echo "Saving bench log also to log file ..."
+echo "Please be patient ..."
+exec > >( tee amber24-bench-`date +%Y%m%d`-`hostname -s`-$1.$$.log) 2>&1
+
+# save script for reference :)
+echo "### This is $0"
+cat $0
+
+echo "Start: `date`  / `date +%s`"
+
+echo "########################################"
+
+# testcluster, tinygpu
+#module load amber-gpu/24p02-at24p04-gnu-cuda12.4
+
+# alex
+module load amber/24p02-at24p05-gnu-cuda12.4  
+
+#cat /proc/cpuinfo
+
+RESULT=$1
+mkdir -p "$RESULT"
+
+export CUDA_VISIBLE_DEVICES=0
+nvidia-smi -i $CUDA_VISIBLE_DEVICES
+
+for J in 1410; do 
+#for ((J=1110; J<=1410; J+=60)); do
+
+# === PARSE GPU CLOCK SETTINGS ===
+#A100 only supports 1215
+GPU_MEM_CLOCK="1215"
+GPU_GRAPHICS_CLOCK="$J"
+FREQ_TAG="1215,$J"
+
+# === SET GPU CLOCKS ===  
+#echo "SETTING GPU CLOCKS TO MEM=$GPU_MEM_CLOCK, GRAPHICS=$GPU_GRAPHICS_CLOCK"
+# example clock ref: "1215,1410"
+#sudo /usr/bin/nvidia-smi --applications-clocks=$FREQ_TAG
+#sudo /usr/bin/nvidia-smi --power-limit="400"
+
+OUTDIR=$FREQ_TAG
+mkdir -p "$1/$OUTDIR"
+
+for i in Cellulose JAC STMV FactorIX; do
+	for n in NPT NVE; do
+
+#nvidia-smi -q -i $CUDA_VISIBLE_DEVICES -d POWER,UTILIZATION --loop > "$RESULT/$OUTDIR/$i-$n-`date +%Y%m%d`-`hostname -s`-$1.$$".powerlog & PID=$!
+
+nvidia-smi -i $CUDA_VISIBLE_DEVICES --loop-ms=100 --query-gpu=timestamp,power.draw,utilization.gpu --format=csv > $RESULT/$OUTDIR/${i}_${n}_${FREQ_TAG}_powerlog.csv & POWER_PID=$!
+
+echo "!!!! SMT IST AKTIV! ALSO NUR 8 PHYSIKALISCHE KERNE !!!!"
+
+pmemd.cuda -O -i PME/${i}_production_${n}_4fs/mdin.GPU -o "$RESULT/$OUTDIR/${i}_${n}_$1.$$".mdout -p PME/Topologies/$i.prmtop -c PME/Coordinates/$i.inpcrd
+
+echo "End: `date`  / `date +%s`"
+
+kill $POWER_PID
+	done
+done
+
+for i in TRPCage myoglobin nucleosome; do 
+#for i in TRPCage ; do 
+
+
+
+#nvidia-smi -q -i $CUDA_VISIBLE_DEVICES -d POWER,UTILIZATION --loop > "$RESULT/$OUTDIR/$i-`date +%Y%m%d`-`hostname -s`-$1.$$".powerlog &PID=$!
+
+nvidia-smi -i $CUDA_VISIBLE_DEVICES --loop-ms=100 --query-gpu=timestamp,power.draw,utilization.gpu --format=csv > $RESULT/$OUTDIR/${i}_${FREQ_TAG}_powerlog.csv & POWER_PID=$!
+
+echo "!!!! SMT ist aktiv! Also nur 8 physikalische Kerne !!!!"
+
+pmemd.cuda -O -i GB/$i/mdin.GPU -o "$RESULT/$OUTDIR/${i}_$1.$$".mdout -p GB/$i/prmtop -c GB/$i/inpcrd
+
+echo "End: `date`  / `date +%s`"
+
+kill $POWER_PID
+
+done
+done 
+Start: Sa 6. Dez 15:48:39 CET 2025  / 1765032519
+########################################
+Loading amber/24p02-at24p05-gnu-cuda12.4
+  Loading requirement: mkl/2021.4.0 cuda/12.4.1
+Sat Dec  6 15:48:39 2025       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.105.08             Driver Version: 580.105.08     CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA A100-SXM4-40GB          On  |   00000000:0E:00.0 Off |                    0 |
+| N/A   38C    P0             78W /  400W |       0MiB /  40960MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+!!!! SMT IST AKTIV! ALSO NUR 8 PHYSIKALISCHE KERNE !!!!
+           0
+Note: The following floating-point exceptions are signalling: IEEE_UNDERFLOW_FLAG IEEE_DENORMAL
+End: Sa 6. Dez 15:51:58 CET 2025  / 1765032718
+!!!! SMT IST AKTIV! ALSO NUR 8 PHYSIKALISCHE KERNE !!!!
+           0
+Note: The following floating-point exceptions are signalling: IEEE_UNDERFLOW_FLAG IEEE_DENORMAL
+End: Sa 6. Dez 15:55:08 CET 2025  / 1765032908
+!!!! SMT IST AKTIV! ALSO NUR 8 PHYSIKALISCHE KERNE !!!!
+           0
+Note: The following floating-point exceptions are signalling: IEEE_UNDERFLOW_FLAG IEEE_DENORMAL
+End: Sa 6. Dez 16:00:43 CET 2025  / 1765033243
+!!!! SMT IST AKTIV! ALSO NUR 8 PHYSIKALISCHE KERNE !!!!
+           0
+Note: The following floating-point exceptions are signalling: IEEE_UNDERFLOW_FLAG IEEE_DENORMAL
+End: Sa 6. Dez 16:06:10 CET 2025  / 1765033570
+!!!! SMT IST AKTIV! ALSO NUR 8 PHYSIKALISCHE KERNE !!!!
+           0
+Note: The following floating-point exceptions are signalling: IEEE_UNDERFLOW_FLAG IEEE_DENORMAL
+End: Sa 6. Dez 16:10:53 CET 2025  / 1765033853
+!!!! SMT IST AKTIV! ALSO NUR 8 PHYSIKALISCHE KERNE !!!!
+           0
+Note: The following floating-point exceptions are signalling: IEEE_UNDERFLOW_FLAG IEEE_DENORMAL
+End: Sa 6. Dez 16:15:19 CET 2025  / 1765034119
+!!!! SMT IST AKTIV! ALSO NUR 8 PHYSIKALISCHE KERNE !!!!
+           0
+Note: The following floating-point exceptions are signalling: IEEE_UNDERFLOW_FLAG IEEE_DENORMAL
+End: Sa 6. Dez 16:20:12 CET 2025  / 1765034412
+!!!! SMT IST AKTIV! ALSO NUR 8 PHYSIKALISCHE KERNE !!!!
+           0
+Note: The following floating-point exceptions are signalling: IEEE_UNDERFLOW_FLAG IEEE_DENORMAL
+End: Sa 6. Dez 16:24:52 CET 2025  / 1765034692
+!!!! SMT ist aktiv! Also nur 8 physikalische Kerne !!!!
+           0
+Note: The following floating-point exceptions are signalling: IEEE_INVALID_FLAG IEEE_UNDERFLOW_FLAG IEEE_DENORMAL
+End: Sa 6. Dez 16:48:56 CET 2025  / 1765036136
+!!!! SMT ist aktiv! Also nur 8 physikalische Kerne !!!!
+           0
+Note: The following floating-point exceptions are signalling: IEEE_INVALID_FLAG IEEE_UNDERFLOW_FLAG IEEE_DENORMAL
+End: Sa 6. Dez 17:03:05 CET 2025  / 1765036985
+!!!! SMT ist aktiv! Also nur 8 physikalische Kerne !!!!
+           0
+Note: The following floating-point exceptions are signalling: IEEE_INVALID_FLAG IEEE_UNDERFLOW_FLAG IEEE_DENORMAL
+End: Sa 6. Dez 17:14:12 CET 2025  / 1765037652
