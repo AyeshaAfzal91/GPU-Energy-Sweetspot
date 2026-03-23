@@ -1,0 +1,807 @@
+
+          -------------------------------------------------------
+          Amber 24 PMEMD                              2024
+          -------------------------------------------------------
+
+| PMEMD implementation of SANDER, Release 24
+
+|  Compiled date/time: Thu Nov  7 09:51:41 2024
+| Run on 03/21/2026 at 04:28:42
+
+|   Executable path: pmemd.cuda
+| Working directory: /home/hpc/ihpc/ihpc161h/AMBER
+|          Hostname: h12-12
+
+  [-O]verwriting output
+
+File Assignments:
+|   MDIN: PME/STMV_production_NPT_4fs/mdin.GPU                                  
+|  MDOUT: H100-freq/1593,1410/STMV_NPT_H100-freq.1001639.mdout                  
+| INPCRD: PME/Coordinates/STMV.inpcrd                                           
+|   PARM: PME/Topologies/STMV.prmtop                                            
+| RESTRT: restrt                                                                
+|   REFC: refc                                                                  
+|  MDVEL: mdvel                                                                 
+|   MDEN: mden                                                                  
+|  MDCRD: mdcrd                                                                 
+| MDINFO: mdinfo                                                                
+|  MDFRC: mdfrc                                                                 
+
+
+ Here is the input file:
+
+ Typical Production MD, NPT with Monte-Carlo Barostat,orig:nstlim=10000        
+ &cntrl                                                                        
+   ntx=5, irest=1,                                                             
+   ntc=2, ntf=2,                                                               
+   nstlim=40000,                                                               
+   ntpr=1000, ntwx=1000,                                                       
+   ntwr=10000,                                                                 
+   dt=0.004, cut=9.,                                                           
+   ntt=1, tautp=10.0,                                                          
+   temp0=300.0,                                                                
+   ntb=2, ntp=1, barostat=2,                                                   
+   ioutfm=1,                                                                   
+ &end                                                                          
+
+
+Note: ig = -1. Setting random seed to   921669 based on wallclock time in 
+      microseconds.
+| irandom = 1, using AMBER's internal random number generator (default).
+ 
+|--------------------- INFORMATION ----------------------
+| GPU (CUDA) Version of PMEMD in use: NVIDIA GPU IN USE.
+|                    Version 18.0.0
+| 
+|                      03/25/2018
+| 
+| Implementation by:
+|                    Ross C. Walker     (SDSC)
+|                    Scott Le Grand     (nVIDIA)
+| 
+| Version 18 performance extensions by:
+|                    David Cerutti     (Rutgers)
+| 
+| Precision model in use:
+|      [SPFP] - Single Precision Forces, 64-bit Fixed Point
+|               Accumulation. (Default)
+| 
+|--------------------------------------------------------
+ 
+|----------------- CITATION INFORMATION -----------------
+|
+|    When publishing work that utilized the CUDA version
+|    of AMBER, please cite the following in addition to
+|    the regular AMBER citations:
+|
+|  - Romelia Salomon-Ferrer; Andreas W. Goetz; Duncan
+|    Poole; Scott Le Grand; Ross C. Walker "Routine
+|    microsecond molecular dynamics simulations with
+|    AMBER - Part II: Particle Mesh Ewald", J. Chem.
+|    Theory Comput., 2013, 9 (9), pp3878-3888,
+|    DOI: 10.1021/ct400314y.
+|
+|  - Andreas W. Goetz; Mark J. Williamson; Dong Xu;
+|    Duncan Poole; Scott Le Grand; Ross C. Walker
+|    "Routine microsecond molecular dynamics simulations
+|    with AMBER - Part I: Generalized Born", J. Chem.
+|    Theory Comput., 2012, 8 (5), pp1542-1555.
+|
+|  - Scott Le Grand; Andreas W. Goetz; Ross C. Walker
+|    "SPFP: Speed without compromise - a mixed precision
+|    model for GPU accelerated molecular dynamics
+|    simulations.", Comp. Phys. Comm., 2013, 184
+|    pp374-380, DOI: 10.1016/j.cpc.2012.09.022
+|
+|--------------------------------------------------------
+ 
+|------------------- GPU DEVICE INFO --------------------
+|
+|            CUDA_VISIBLE_DEVICES: 0
+|   CUDA Capable Devices Detected:      1
+|           CUDA Device ID in use:      0
+|                CUDA Device Name: NVIDIA H100
+|     CUDA Device Global Mem Size:  95321 MB
+| CUDA Device Num Multiprocessors:    132
+|           CUDA Device Core Freq:   1.98 GHz
+|
+|--------------------------------------------------------
+ 
+ 
+| Conditional Compilation Defines Used:
+| PUBFFT
+| BINTRAJ
+| CUDA
+| EMIL
+
+| Largest sphere to fit in unit cell has radius =   110.586
+
+| New format PARM file being parsed.
+| Version =    1.000 Date = 11/05/15 Time = 13:28:17
+
+| Note: 1-4 EEL scale factors are being read from the topology file.
+
+| Note: 1-4 VDW scale factors are being read from the topology file.
+| Duplicated    0 dihedrals
+
+| Duplicated    0 dihedrals
+
+--------------------------------------------------------------------------------
+   1.  RESOURCE   USE: 
+--------------------------------------------------------------------------------
+
+ getting new box info from bottom of inpcrd
+ NATOM  = 1067095 NTYPES =      20 NBONH =  978008 MBONA  =   92394
+ NTHETH =  175615 MTHETA =  130397 NPHIH =  356285 MPHIA  =  303771
+ NHPARM =       0 NPARM  =       0 NNB   = 2120077 NRES   =  310471
+ NBONA  =   92394 NTHETA =  130397 NPHIA =  303771 NUMBND =      59
+ NUMANG =     124 NPTRA  =      61 NATYP =      37 NPHB   =       1
+ IFBOX  =       1 NMXRS  =      33 IFCAP =       0 NEXTRA =       0
+ NCOPY  =       0
+
+| Coordinate Index Table dimensions:    44   44   44
+| Direct force subcell size =     5.0266    5.0727    5.1021
+
+     BOX TYPE: RECTILINEAR
+
+--------------------------------------------------------------------------------
+   2.  CONTROL  DATA  FOR  THE  RUN
+--------------------------------------------------------------------------------
+
+                                                                                
+
+General flags:
+     imin    =       0, nmropt  =       0
+
+Nature and format of input:
+     ntx     =       5, irest   =       1, ntrx    =       1
+
+Nature and format of output:
+     ntxo    =       2, ntpr    =    1000, ntrx    =       1, ntwr    =   10000
+     iwrap   =       0, ntwx    =    1000, ntwv    =       0, ntwe    =       0
+     ioutfm  =       1, ntwprt  =       0, idecomp =       0, rbornstat=      0
+
+Potential function:
+     ntf     =       2, ntb     =       2, igb     =       0, nsnb    =      25
+     ipol    =       0, gbsa    =       0, iesp    =       0
+     dielc   =   1.00000, cut     =   9.00000, intdiel =   1.00000
+
+Frozen or restrained atoms:
+     ibelly  =       0, ntr     =       0
+
+Molecular dynamics:
+     nstlim  =     40000, nscm    =      1000, nrespa  =         1
+     t       =   0.00000, dt      =   0.00400, vlimit  =  -1.00000
+
+Berendsen (weak-coupling) temperature regulation:
+     temp0   = 300.00000, tempi   =   0.00000, tautp   =  10.00000
+
+Pressure regulation:
+     ntp     =       1
+     pres0   =   1.00000, comp    =  44.60000, taup    =   1.00000
+     Monte-Carlo Barostat:
+     mcbarint  =     100
+
+SHAKE:
+     ntc     =       2, jfastw  =       0
+     tol     =   0.00001
+
+| Intermolecular bonds treatment:
+|     no_intermolecular_bonds =       1
+
+| Energy averages sample interval:
+|     ene_avg_sampling =    1000
+
+Ewald parameters:
+     verbose =       0, ew_type =       0, nbflag  =       1, use_pme =       1
+     vdwmeth =       1, eedmeth =       1, netfrc  =       1
+     Box X =  221.172   Box Y =  223.199   Box Z =  224.493
+     Alpha =   90.000   Beta  =   90.000   Gamma =   90.000
+     NFFT1 =  224       NFFT2 =  224       NFFT3 =  240
+     Cutoff=    9.000   Tol   =0.100E-04
+     Ewald Coefficient =  0.30768
+     Interpolation order =    4
+| MONTE CARLO BAROSTAT IMPORTANT NOTE:
+|   The Monte-Carlo barostat does not require the virial to adjust the system volume.
+|   Since it is an expensive calculation, it is skipped for efficiency. A side-effect
+|   is that the reported pressure is always 0 because it is not calculated.
+
+--------------------------------------------------------------------------------
+   3.  ATOMIC COORDINATES AND VELOCITIES
+--------------------------------------------------------------------------------
+
+                                                                                
+ begin time read from input coords =  5121.003 ps
+
+ 
+ Number of triangulated 3-point waters found:   300053
+
+     Sum of charges from parm topology file =  -0.00000055
+     Forcing neutrality...
+
+| Dynamic Memory, Types Used:
+| Reals            45273810
+| Integers         50029792
+
+| Nonbonded Pairs Initial Allocation:   243297660
+
+| GPU memory information (estimate):
+| KB of GPU memory in use:   3403732
+| KB of CPU memory in use:   1614868
+
+--------------------------------------------------------------------------------
+   4.  RESULTS
+--------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000111     0.00(Removed)
+
+ NSTEP =     1000   TIME(PS) =    5125.003  TEMP(K) =   310.94  PRESS =     0.0
+ Etot   =  -2608020.0547  EKtot   =    686869.0625  EPtot      =  -3294889.1172
+ BOND   =     45405.7376  ANGLE   =    102727.3168  DIHED      =    123428.8771
+ 1-4 NB =     40553.5132  1-4 EEL =    215006.0856  VDWAALS    =    337537.4066
+ EELEC  =  -4159548.0542  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11082169.1330
+                                                    Density    =         1.0032
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =     2000   TIME(PS) =    5129.003  TEMP(K) =   309.13  PRESS =     0.0
+ Etot   =  -2616288.1126  EKtot   =    682882.3750  EPtot      =  -3299170.4876
+ BOND   =     43213.8727  ANGLE   =     98810.6873  DIHED      =    122757.6676
+ 1-4 NB =     40169.1545  1-4 EEL =    214834.7540  VDWAALS    =    337087.7050
+ EELEC  =  -4156044.3287  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11082169.1330
+                                                    Density    =         1.0032
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =     3000   TIME(PS) =    5133.003  TEMP(K) =   307.15  PRESS =     0.0
+ Etot   =  -2623063.8819  EKtot   =    678503.6250  EPtot      =  -3301567.5069
+ BOND   =     42238.5907  ANGLE   =     97117.3939  DIHED      =    122208.3353
+ 1-4 NB =     40117.9307  1-4 EEL =    214881.8717  VDWAALS    =    335155.5866
+ EELEC  =  -4153287.2158  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11082169.1330
+                                                    Density    =         1.0032
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =     4000   TIME(PS) =    5137.003  TEMP(K) =   305.92  PRESS =     0.0
+ Etot   =  -2628690.6337  EKtot   =    675794.5000  EPtot      =  -3304485.1337
+ BOND   =     41198.2381  ANGLE   =     95080.8097  DIHED      =    122057.0874
+ 1-4 NB =     40216.3133  1-4 EEL =    214793.8675  VDWAALS    =    335315.5048
+ EELEC  =  -4153146.9546  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11082169.1330
+                                                    Density    =         1.0032
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =     5000   TIME(PS) =    5141.003  TEMP(K) =   305.10  PRESS =     0.0
+ Etot   =  -2633375.2544  EKtot   =    673979.9375  EPtot      =  -3307355.1919
+ BOND   =     40869.1532  ANGLE   =     93940.1931  DIHED      =    121863.1346
+ 1-4 NB =     40125.9959  1-4 EEL =    214881.2940  VDWAALS    =    334152.6082
+ EELEC  =  -4153187.5709  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11082169.1330
+                                                    Density    =         1.0032
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =     6000   TIME(PS) =    5145.003  TEMP(K) =   304.05  PRESS =     0.0
+ Etot   =  -2637597.8291  EKtot   =    671652.0000  EPtot      =  -3309249.8291
+ BOND   =     40032.5789  ANGLE   =     93354.1389  DIHED      =    121508.9409
+ 1-4 NB =     39885.0641  1-4 EEL =    215241.6964  VDWAALS    =    335277.8804
+ EELEC  =  -4154550.1287  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11082169.1330
+                                                    Density    =         1.0032
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =     7000   TIME(PS) =    5149.003  TEMP(K) =   303.54  PRESS =     0.0
+ Etot   =  -2640923.6734  EKtot   =    670539.0625  EPtot      =  -3311462.7359
+ BOND   =     40146.3961  ANGLE   =     92912.9647  DIHED      =    121175.4946
+ 1-4 NB =     40006.2203  1-4 EEL =    215256.0204  VDWAALS    =    332254.0380
+ EELEC  =  -4153213.8699  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11082169.1330
+                                                    Density    =         1.0032
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =     8000   TIME(PS) =    5153.003  TEMP(K) =   303.00  PRESS =     0.0
+ Etot   =  -2643890.8203  EKtot   =    669337.2500  EPtot      =  -3313228.0703
+ BOND   =     39623.1887  ANGLE   =     92131.5279  DIHED      =    121228.7583
+ 1-4 NB =     39988.5272  1-4 EEL =    215238.2137  VDWAALS    =    334840.6161
+ EELEC  =  -4156278.9022  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11082169.1330
+                                                    Density    =         1.0032
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =     9000   TIME(PS) =    5157.003  TEMP(K) =   302.47  PRESS =     0.0
+ Etot   =  -2646289.7959  EKtot   =    668176.4375  EPtot      =  -3314466.2334
+ BOND   =     39479.4552  ANGLE   =     92096.8065  DIHED      =    120833.9216
+ 1-4 NB =     40019.1796  1-4 EEL =    215949.2940  VDWAALS    =    335494.5025
+ EELEC  =  -4158339.3929  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11082169.1330
+                                                    Density    =         1.0032
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    10000   TIME(PS) =    5161.003  TEMP(K) =   302.27  PRESS =     0.0
+ Etot   =  -2648408.2816  EKtot   =    667731.7500  EPtot      =  -3316140.0316
+ BOND   =     39135.8340  ANGLE   =     91538.7372  DIHED      =    121079.2191
+ 1-4 NB =     40107.5994  1-4 EEL =    215801.3754  VDWAALS    =    334655.1426
+ EELEC  =  -4158457.9393  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11082169.1330
+                                                    Density    =         1.0032
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    11000   TIME(PS) =    5165.003  TEMP(K) =   301.79  PRESS =     0.0
+ Etot   =  -2650286.2657  EKtot   =    666659.9375  EPtot      =  -3316946.2032
+ BOND   =     38978.2089  ANGLE   =     91169.2757  DIHED      =    120887.0801
+ 1-4 NB =     39933.6322  1-4 EEL =    215704.9643  VDWAALS    =    335594.5949
+ EELEC  =  -4159213.9594  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11082169.1330
+                                                    Density    =         1.0032
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    12000   TIME(PS) =    5169.003  TEMP(K) =   301.70  PRESS =     0.0
+ Etot   =  -2651935.5798  EKtot   =    666465.6875  EPtot      =  -3318401.2673
+ BOND   =     38716.5513  ANGLE   =     91218.2774  DIHED      =    121010.3765
+ 1-4 NB =     40092.3822  1-4 EEL =    215774.3250  VDWAALS    =    335791.4943
+ EELEC  =  -4161004.6741  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11082169.1330
+                                                    Density    =         1.0032
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    13000   TIME(PS) =    5173.003  TEMP(K) =   301.46  PRESS =     0.0
+ Etot   =  -2653149.1916  EKtot   =    665940.8750  EPtot      =  -3319090.0666
+ BOND   =     38865.3229  ANGLE   =     90046.1416  DIHED      =    120863.2568
+ 1-4 NB =     39829.7382  1-4 EEL =    215350.7671  VDWAALS    =    336504.9210
+ EELEC  =  -4160550.2141  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11082169.1330
+                                                    Density    =         1.0032
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    14000   TIME(PS) =    5177.003  TEMP(K) =   301.24  PRESS =     0.0
+ Etot   =  -2654192.4677  EKtot   =    665454.6875  EPtot      =  -3319647.1552
+ BOND   =     38642.4395  ANGLE   =     90191.8296  DIHED      =    120836.2025
+ 1-4 NB =     39957.3741  1-4 EEL =    215814.9194  VDWAALS    =    333192.8697
+ EELEC  =  -4158282.7901  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11082169.1330
+                                                    Density    =         1.0032
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    15000   TIME(PS) =    5181.003  TEMP(K) =   301.16  PRESS =     0.0
+ Etot   =  -2655144.9179  EKtot   =    665278.9375  EPtot      =  -3320423.8554
+ BOND   =     38517.4703  ANGLE   =     89833.0599  DIHED      =    120630.4259
+ 1-4 NB =     39843.0717  1-4 EEL =    215529.8519  VDWAALS    =    335616.3577
+ EELEC  =  -4160394.0928  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11083868.6168
+                                                    Density    =         1.0031
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    16000   TIME(PS) =    5185.003  TEMP(K) =   300.58  PRESS =     0.0
+ Etot   =  -2655860.8367  EKtot   =    663989.5625  EPtot      =  -3319850.3992
+ BOND   =     38773.7366  ANGLE   =     89542.0162  DIHED      =    120761.9689
+ 1-4 NB =     39831.0345  1-4 EEL =    215536.6650  VDWAALS    =    335215.7643
+ EELEC  =  -4159511.5847  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11083868.6168
+                                                    Density    =         1.0031
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    17000   TIME(PS) =    5189.003  TEMP(K) =   300.67  PRESS =     0.0
+ Etot   =  -2656474.6515  EKtot   =    664187.5625  EPtot      =  -3320662.2140
+ BOND   =     38382.4534  ANGLE   =     89652.7008  DIHED      =    120845.1764
+ 1-4 NB =     39829.2393  1-4 EEL =    215598.7648  VDWAALS    =    334208.2417
+ EELEC  =  -4159178.7904  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11083868.6168
+                                                    Density    =         1.0031
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    18000   TIME(PS) =    5193.003  TEMP(K) =   300.28  PRESS =     0.0
+ Etot   =  -2657140.5628  EKtot   =    663319.0625  EPtot      =  -3320459.6253
+ BOND   =     38187.7468  ANGLE   =     89866.9155  DIHED      =    120564.6125
+ 1-4 NB =     39674.2808  1-4 EEL =    215252.6927  VDWAALS    =    333762.3411
+ EELEC  =  -4157768.2147  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11083868.6168
+                                                    Density    =         1.0031
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    19000   TIME(PS) =    5197.003  TEMP(K) =   300.62  PRESS =     0.0
+ Etot   =  -2657655.0781  EKtot   =    664070.6250  EPtot      =  -3321725.7031
+ BOND   =     38066.4375  ANGLE   =     89647.3973  DIHED      =    120248.5931
+ 1-4 NB =     39988.1857  1-4 EEL =    215452.8826  VDWAALS    =    334903.5783
+ EELEC  =  -4160032.7774  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11083868.6168
+                                                    Density    =         1.0031
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    20000   TIME(PS) =    5201.003  TEMP(K) =   300.47  PRESS =     0.0
+ Etot   =  -2658029.8291  EKtot   =    663740.1250  EPtot      =  -3321769.9541
+ BOND   =     38390.6044  ANGLE   =     88662.1040  DIHED      =    120526.5076
+ 1-4 NB =     39777.8106  1-4 EEL =    215884.6207  VDWAALS    =    335184.3111
+ EELEC  =  -4160195.9126  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11083696.3873
+                                                    Density    =         1.0031
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    21000   TIME(PS) =    5205.003  TEMP(K) =   300.43  PRESS =     0.0
+ Etot   =  -2658413.7841  EKtot   =    663663.1875  EPtot      =  -3322076.9716
+ BOND   =     38402.3623  ANGLE   =     88720.3530  DIHED      =    120348.2004
+ 1-4 NB =     39767.8305  1-4 EEL =    215528.7182  VDWAALS    =    334229.1524
+ EELEC  =  -4159073.5882  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11083178.2414
+                                                    Density    =         1.0031
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    22000   TIME(PS) =    5209.003  TEMP(K) =   300.22  PRESS =     0.0
+ Etot   =  -2658849.0788  EKtot   =    663205.3750  EPtot      =  -3322054.4538
+ BOND   =     37631.9208  ANGLE   =     88915.3673  DIHED      =    120571.7539
+ 1-4 NB =     39939.1568  1-4 EEL =    215422.6382  VDWAALS    =    334912.0308
+ EELEC  =  -4159447.3214  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11083178.2414
+                                                    Density    =         1.0031
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    23000   TIME(PS) =    5213.003  TEMP(K) =   300.36  PRESS =     0.0
+ Etot   =  -2658977.3747  EKtot   =    663511.6875  EPtot      =  -3322489.0622
+ BOND   =     38142.3746  ANGLE   =     88693.6783  DIHED      =    120436.3434
+ 1-4 NB =     39827.9772  1-4 EEL =    215704.6151  VDWAALS    =    333415.2306
+ EELEC  =  -4158709.2815  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11083178.2414
+                                                    Density    =         1.0031
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    24000   TIME(PS) =    5217.003  TEMP(K) =   299.90  PRESS =     0.0
+ Etot   =  -2659064.8940  EKtot   =    662481.5000  EPtot      =  -3321546.3940
+ BOND   =     37983.4533  ANGLE   =     88916.2202  DIHED      =    120167.2120
+ 1-4 NB =     39828.9083  1-4 EEL =    215612.5088  VDWAALS    =    333383.6893
+ EELEC  =  -4157438.3860  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11087133.0333
+                                                    Density    =         1.0028
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    25000   TIME(PS) =    5221.003  TEMP(K) =   299.71  PRESS =     0.0
+ Etot   =  -2659160.3555  EKtot   =    662080.7500  EPtot      =  -3321241.1055
+ BOND   =     37803.4821  ANGLE   =     88840.3604  DIHED      =    120285.6321
+ 1-4 NB =     39904.0383  1-4 EEL =    215974.3198  VDWAALS    =    334209.3361
+ EELEC  =  -4158258.2743  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11087133.0333
+                                                    Density    =         1.0028
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    26000   TIME(PS) =    5225.003  TEMP(K) =   300.31  PRESS =     0.0
+ Etot   =  -2659315.5575  EKtot   =    663400.9375  EPtot      =  -3322716.4950
+ BOND   =     37748.3479  ANGLE   =     88410.7336  DIHED      =    120579.1455
+ 1-4 NB =     39703.9749  1-4 EEL =    215801.5961  VDWAALS    =    335092.5492
+ EELEC  =  -4160052.8422  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11088271.2831
+                                                    Density    =         1.0027
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    27000   TIME(PS) =    5229.003  TEMP(K) =   300.14  PRESS =     0.0
+ Etot   =  -2659336.4572  EKtot   =    663030.1875  EPtot      =  -3322366.6447
+ BOND   =     37891.3613  ANGLE   =     88842.7325  DIHED      =    120118.9609
+ 1-4 NB =     39804.1445  1-4 EEL =    215550.9282  VDWAALS    =    334176.9631
+ EELEC  =  -4158751.7352  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11088271.2831
+                                                    Density    =         1.0027
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    28000   TIME(PS) =    5233.003  TEMP(K) =   299.81  PRESS =     0.0
+ Etot   =  -2659382.6358  EKtot   =    662291.5625  EPtot      =  -3321674.1983
+ BOND   =     37919.0407  ANGLE   =     88657.5514  DIHED      =    120438.2930
+ 1-4 NB =     40020.0666  1-4 EEL =    215955.5370  VDWAALS    =    333274.9405
+ EELEC  =  -4157939.6274  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11088274.3401
+                                                    Density    =         1.0027
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    29000   TIME(PS) =    5237.003  TEMP(K) =   300.26  PRESS =     0.0
+ Etot   =  -2659509.4992  EKtot   =    663284.9375  EPtot      =  -3322794.4367
+ BOND   =     37772.8700  ANGLE   =     88388.4986  DIHED      =    120325.2608
+ 1-4 NB =     39779.9233  1-4 EEL =    215648.4230  VDWAALS    =    333396.9153
+ EELEC  =  -4158106.3278  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11089012.2931
+                                                    Density    =         1.0026
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    30000   TIME(PS) =    5241.003  TEMP(K) =   299.80  PRESS =     0.0
+ Etot   =  -2659334.7310  EKtot   =    662260.6875  EPtot      =  -3321595.4185
+ BOND   =     37800.5186  ANGLE   =     88781.3756  DIHED      =    119915.1340
+ 1-4 NB =     39591.8294  1-4 EEL =    215175.3336  VDWAALS    =    332706.9747
+ EELEC  =  -4155566.5844  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11090709.1038
+                                                    Density    =         1.0025
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    31000   TIME(PS) =    5245.003  TEMP(K) =   300.10  PRESS =     0.0
+ Etot   =  -2659452.7565  EKtot   =    662934.2500  EPtot      =  -3322387.0065
+ BOND   =     37531.9201  ANGLE   =     88018.4052  DIHED      =    120201.3145
+ 1-4 NB =     39706.5096  1-4 EEL =    215539.6492  VDWAALS    =    333336.8235
+ EELEC  =  -4156721.6288  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11090709.1038
+                                                    Density    =         1.0025
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    32000   TIME(PS) =    5249.003  TEMP(K) =   300.05  PRESS =     0.0
+ Etot   =  -2659373.9139  EKtot   =    662821.3750  EPtot      =  -3322195.2889
+ BOND   =     37868.1026  ANGLE   =     88440.6714  DIHED      =    120016.0115
+ 1-4 NB =     39564.2377  1-4 EEL =    215228.7501  VDWAALS    =    333047.0751
+ EELEC  =  -4156360.1374  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11093046.9575
+                                                    Density    =         1.0023
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    33000   TIME(PS) =    5253.003  TEMP(K) =   300.05  PRESS =     0.0
+ Etot   =  -2659388.7006  EKtot   =    662823.7500  EPtot      =  -3322212.4506
+ BOND   =     37770.0465  ANGLE   =     88155.5670  DIHED      =    120226.8927
+ 1-4 NB =     39842.7409  1-4 EEL =    215632.2526  VDWAALS    =    333106.0987
+ EELEC  =  -4156946.0490  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11093046.9575
+                                                    Density    =         1.0023
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    34000   TIME(PS) =    5257.003  TEMP(K) =   300.00  PRESS =     0.0
+ Etot   =  -2659337.7523  EKtot   =    662714.3750  EPtot      =  -3322052.1273
+ BOND   =     37791.9517  ANGLE   =     88430.5313  DIHED      =    120044.9830
+ 1-4 NB =     39759.1623  1-4 EEL =    215339.7785  VDWAALS    =    333473.9597
+ EELEC  =  -4156892.4938  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11092880.9585
+                                                    Density    =         1.0023
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    35000   TIME(PS) =    5261.003  TEMP(K) =   300.05  PRESS =     0.0
+ Etot   =  -2659394.8587  EKtot   =    662810.5000  EPtot      =  -3322205.3587
+ BOND   =     37381.6933  ANGLE   =     88326.2684  DIHED      =    120348.6253
+ 1-4 NB =     39745.0768  1-4 EEL =    215890.3897  VDWAALS    =    333409.4633
+ EELEC  =  -4157306.8756  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11092880.9585
+                                                    Density    =         1.0023
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    36000   TIME(PS) =    5265.003  TEMP(K) =   300.05  PRESS =     0.0
+ Etot   =  -2659349.6655  EKtot   =    662811.0000  EPtot      =  -3322160.6655
+ BOND   =     37265.7943  ANGLE   =     88088.8967  DIHED      =    120351.5909
+ 1-4 NB =     39734.9269  1-4 EEL =    216147.7394  VDWAALS    =    332570.5863
+ EELEC  =  -4156320.1998  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11092675.4795
+                                                    Density    =         1.0023
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    37000   TIME(PS) =    5269.003  TEMP(K) =   299.82  PRESS =     0.0
+ Etot   =  -2659354.7056  EKtot   =    662318.3750  EPtot      =  -3321673.0806
+ BOND   =     37641.8085  ANGLE   =     88151.0540  DIHED      =    120175.5154
+ 1-4 NB =     39809.6176  1-4 EEL =    215641.4143  VDWAALS    =    333701.7186
+ EELEC  =  -4156794.2090  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11092637.3893
+                                                    Density    =         1.0023
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    38000   TIME(PS) =    5273.003  TEMP(K) =   299.78  PRESS =     0.0
+ Etot   =  -2659291.4371  EKtot   =    662225.4375  EPtot      =  -3321516.8746
+ BOND   =     37895.5552  ANGLE   =     88429.7247  DIHED      =    120218.2305
+ 1-4 NB =     39634.4683  1-4 EEL =    215613.3340  VDWAALS    =    331800.1042
+ EELEC  =  -4155108.2914  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11091342.1866
+                                                    Density    =         1.0024
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    39000   TIME(PS) =    5277.003  TEMP(K) =   299.96  PRESS =     0.0
+ Etot   =  -2659493.1070  EKtot   =    662623.3125  EPtot      =  -3322116.4195
+ BOND   =     37338.6485  ANGLE   =     88512.8643  DIHED      =    120179.4077
+ 1-4 NB =     39835.2311  1-4 EEL =    215874.0985  VDWAALS    =    331217.2442
+ EELEC  =  -4155073.9137  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11092252.7509
+                                                    Density    =         1.0023
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    40000   TIME(PS) =    5281.003  TEMP(K) =   299.75  PRESS =     0.0
+ Etot   =  -2659307.6103  EKtot   =    662157.4375  EPtot      =  -3321465.0478
+ BOND   =     37729.6579  ANGLE   =     87651.0119  DIHED      =    120007.2531
+ 1-4 NB =     39715.2172  1-4 EEL =    216012.3080  VDWAALS    =    333104.6589
+ EELEC  =  -4155685.1547  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11092383.2549
+                                                    Density    =         1.0023
+ ------------------------------------------------------------------------------
+
+
+      A V E R A G E S   O V E R      40 S T E P S
+
+
+ NSTEP =    40000   TIME(PS) =    5281.003  TEMP(K) =   301.60  PRESS =     0.0
+ Etot   =  -2651537.6648  EKtot   =    666250.5922  EPtot      =  -3317788.2570
+ BOND   =     38804.3732  ANGLE   =     90472.8040  DIHED      =    120756.7849
+ 1-4 NB =     39886.5321  1-4 EEL =    215526.9815  VDWAALS    =    334232.7745
+ EELEC  =  -4157468.5072  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =  11086140.0606
+                                                    Density    =         1.0029
+ ------------------------------------------------------------------------------
+
+
+      R M S  F L U C T U A T I O N S
+
+
+ NSTEP =    40000   TIME(PS) =    5281.003  TEMP(K) =     2.62  PRESS =     0.0
+ Etot   =     12818.3117  EKtot   =      5793.9474  EPtot      =      7061.1982
+ BOND   =      1685.9518  ANGLE   =      3193.6331  DIHED      =       766.7549
+ 1-4 NB =       189.9209  1-4 EEL =       343.1735  VDWAALS    =      1358.6148
+ EELEC  =      2156.3063  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =      4239.9188
+                                                    Density    =         0.0004
+ ------------------------------------------------------------------------------
+
+| MC Barostat:        400 volume changes attempted.
+| MC Barostat:         27 changes successful (  6.75%)
+ ------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+   5.  TIMINGS
+--------------------------------------------------------------------------------
+
+|  NonSetup CPU Time in Major Routines:
+|
+|     Routine           Sec        %
+|     ------------------------------
+|     Nonbond          13.21    6.33
+|     Bond              0.00    0.00
+|     Angle             0.00    0.00
+|     Dihedral          0.00    0.00
+|     Shake             0.18    0.08
+|     RunMD           189.32   90.70
+|     Other             6.02    2.88
+|     ------------------------------
+|     Total           208.73
+
+|  PME Nonbond Pairlist CPU Time:
+|
+|     Routine              Sec        %
+|     ---------------------------------
+|     Set Up Cit           0.00    0.00
+|     Build List           0.00    0.00
+|     ---------------------------------
+|     Total                0.00    0.00
+
+|  PME Direct Force CPU Time:
+|
+|     Routine              Sec        %
+|     ---------------------------------
+|     NonBonded Calc       0.00    0.00
+|     Exclude Masked       0.00    0.00
+|     Other                0.07    0.03
+|     ---------------------------------
+|     Total                0.07    0.03
+
+|  PME Reciprocal Force CPU Time:
+|
+|     Routine              Sec        %
+|     ---------------------------------
+|     1D bspline           0.00    0.00
+|     Grid Charges         0.00    0.00
+|     Scalar Sum           0.00    0.00
+|     Gradient Sum         0.00    0.00
+|     FFT                  0.00    0.00
+|     ---------------------------------
+|     Total                0.00    0.00
+
+|  Final Performance Info:
+|     -----------------------------------------------------
+|     Average timings for last    3000 steps:
+|     Elapsed(s) =      15.73 Per Step(ms) =       5.24
+|         ns/day =      65.91   seconds/ns =    1310.93
+|
+|     Average timings for all steps:
+|     Elapsed(s) =     209.48 Per Step(ms) =       5.24
+|         ns/day =      65.99   seconds/ns =    1309.24
+|     -----------------------------------------------------
+
+|  Setup CPU time:            5.53 seconds
+|  NonSetup CPU time:       208.73 seconds
+|  Total CPU time:          214.26 seconds     0.06 hours
+
+|  Setup wall time:           6    seconds
+|  NonSetup wall time:      209    seconds
+|  Total wall time:         215    seconds     0.06 hours

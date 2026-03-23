@@ -1,0 +1,2353 @@
+
+          -------------------------------------------------------
+          Amber 24 PMEMD                              2024
+          -------------------------------------------------------
+
+| PMEMD implementation of SANDER, Release 24
+
+|  Compiled date/time: Thu Nov  7 09:51:41 2024
+| Run on 03/16/2026 at 23:58:03
+
+|   Executable path: pmemd.cuda
+| Working directory: /home/hpc/ihpc/ihpc161h/AMBER
+|          Hostname: h12-12
+
+  [-O]verwriting output
+
+File Assignments:
+|   MDIN: PME/FactorIX_production_NPT_4fs/mdin.GPU                              
+|  MDOUT: H100-cap350/370/FactorIX_NPT_H100-cap350.19764.mdout                  
+| INPCRD: PME/Coordinates/FactorIX.inpcrd                                       
+|   PARM: PME/Topologies/FactorIX.prmtop                                        
+| RESTRT: restrt                                                                
+|   REFC: refc                                                                  
+|  MDVEL: mdvel                                                                 
+|   MDEN: mden                                                                  
+|  MDCRD: mdcrd                                                                 
+| MDINFO: mdinfo                                                                
+|  MDFRC: mdfrc                                                                 
+
+
+ Here is the input file:
+
+ Typical Production MD, NPT with Monte-Carlo Barostat,orig:nstlim=100000       
+ &cntrl                                                                        
+   ntx=5, irest=1,                                                             
+   ntc=2, ntf=2,                                                               
+   nstlim=400000,                                                              
+   ntpr=2500, ntwx=2500,                                                       
+   ntwr=100000,                                                                
+   dt=0.004, cut=9.,                                                           
+   ntt=1, tautp=10.0,                                                          
+   temp0=300.0,                                                                
+   ntb=2, ntp=1, barostat=2,                                                   
+   ioutfm=1,                                                                   
+ &end                                                                          
+
+
+Note: ig = -1. Setting random seed to   428714 based on wallclock time in 
+      microseconds.
+| irandom = 1, using AMBER's internal random number generator (default).
+ 
+|--------------------- INFORMATION ----------------------
+| GPU (CUDA) Version of PMEMD in use: NVIDIA GPU IN USE.
+|                    Version 18.0.0
+| 
+|                      03/25/2018
+| 
+| Implementation by:
+|                    Ross C. Walker     (SDSC)
+|                    Scott Le Grand     (nVIDIA)
+| 
+| Version 18 performance extensions by:
+|                    David Cerutti     (Rutgers)
+| 
+| Precision model in use:
+|      [SPFP] - Single Precision Forces, 64-bit Fixed Point
+|               Accumulation. (Default)
+| 
+|--------------------------------------------------------
+ 
+|----------------- CITATION INFORMATION -----------------
+|
+|    When publishing work that utilized the CUDA version
+|    of AMBER, please cite the following in addition to
+|    the regular AMBER citations:
+|
+|  - Romelia Salomon-Ferrer; Andreas W. Goetz; Duncan
+|    Poole; Scott Le Grand; Ross C. Walker "Routine
+|    microsecond molecular dynamics simulations with
+|    AMBER - Part II: Particle Mesh Ewald", J. Chem.
+|    Theory Comput., 2013, 9 (9), pp3878-3888,
+|    DOI: 10.1021/ct400314y.
+|
+|  - Andreas W. Goetz; Mark J. Williamson; Dong Xu;
+|    Duncan Poole; Scott Le Grand; Ross C. Walker
+|    "Routine microsecond molecular dynamics simulations
+|    with AMBER - Part I: Generalized Born", J. Chem.
+|    Theory Comput., 2012, 8 (5), pp1542-1555.
+|
+|  - Scott Le Grand; Andreas W. Goetz; Ross C. Walker
+|    "SPFP: Speed without compromise - a mixed precision
+|    model for GPU accelerated molecular dynamics
+|    simulations.", Comp. Phys. Comm., 2013, 184
+|    pp374-380, DOI: 10.1016/j.cpc.2012.09.022
+|
+|--------------------------------------------------------
+ 
+|------------------- GPU DEVICE INFO --------------------
+|
+|            CUDA_VISIBLE_DEVICES: 0
+|   CUDA Capable Devices Detected:      1
+|           CUDA Device ID in use:      0
+|                CUDA Device Name: NVIDIA H100
+|     CUDA Device Global Mem Size:  95321 MB
+| CUDA Device Num Multiprocessors:    132
+|           CUDA Device Core Freq:   1.98 GHz
+|
+|--------------------------------------------------------
+ 
+ 
+| Conditional Compilation Defines Used:
+| PUBFFT
+| BINTRAJ
+| CUDA
+| EMIL
+
+| Largest sphere to fit in unit cell has radius =    39.339
+
+| New format PARM file being parsed.
+| Version =    1.000 Date = 07/26/18 Time = 15:02:36
+
+| Note: 1-4 EEL scale factors were NOT found in the topology file.
+|       Using default value of 1.2.
+
+| Note: 1-4 VDW scale factors were NOT found in the topology file.
+|       Using default value of 2.0.
+| Duplicated  874 dihedrals
+
+| Duplicated 4435 dihedrals
+
+--------------------------------------------------------------------------------
+   1.  RESOURCE   USE: 
+--------------------------------------------------------------------------------
+
+ getting new box info from bottom of inpcrd
+ NATOM  =   90906 NTYPES =      19 NBONH =   87891 MBONA  =    3077
+ NTHETH =    6433 MTHETA =    4178 NPHIH =   11305 MPHIA  =    5519
+ NHPARM =       0 NPARM  =       0 NNB   =  145596 NRES   =   28750
+ NBONA  =    3077 NTHETA =    4178 NPHIA =    5519 NUMBND =      46
+ NUMANG =     100 NPTRA  =      54 NATYP =      31 NPHB   =       1
+ IFBOX  =       1 NMXRS  =      24 IFCAP =       0 NEXTRA =       0
+ NCOPY  =       0
+
+| Coordinate Index Table dimensions:    28   16   15
+| Direct force subcell size =     5.0745    5.2086    5.2452
+
+     BOX TYPE: RECTILINEAR
+
+--------------------------------------------------------------------------------
+   2.  CONTROL  DATA  FOR  THE  RUN
+--------------------------------------------------------------------------------
+
+| Converted old-style topology                                                  
+
+General flags:
+     imin    =       0, nmropt  =       0
+
+Nature and format of input:
+     ntx     =       5, irest   =       1, ntrx    =       1
+
+Nature and format of output:
+     ntxo    =       2, ntpr    =    2500, ntrx    =       1, ntwr    =  100000
+     iwrap   =       0, ntwx    =    2500, ntwv    =       0, ntwe    =       0
+     ioutfm  =       1, ntwprt  =       0, idecomp =       0, rbornstat=      0
+
+Potential function:
+     ntf     =       2, ntb     =       2, igb     =       0, nsnb    =      25
+     ipol    =       0, gbsa    =       0, iesp    =       0
+     dielc   =   1.00000, cut     =   9.00000, intdiel =   1.00000
+
+Frozen or restrained atoms:
+     ibelly  =       0, ntr     =       0
+
+Molecular dynamics:
+     nstlim  =    400000, nscm    =      1000, nrespa  =         1
+     t       =   0.00000, dt      =   0.00400, vlimit  =  -1.00000
+
+Berendsen (weak-coupling) temperature regulation:
+     temp0   = 300.00000, tempi   =   0.00000, tautp   =  10.00000
+
+Pressure regulation:
+     ntp     =       1
+     pres0   =   1.00000, comp    =  44.60000, taup    =   1.00000
+     Monte-Carlo Barostat:
+     mcbarint  =     100
+
+SHAKE:
+     ntc     =       2, jfastw  =       0
+     tol     =   0.00001
+
+| Intermolecular bonds treatment:
+|     no_intermolecular_bonds =       1
+
+| Energy averages sample interval:
+|     ene_avg_sampling =    2500
+
+Ewald parameters:
+     verbose =       0, ew_type =       0, nbflag  =       1, use_pme =       1
+     vdwmeth =       1, eedmeth =       1, netfrc  =       1
+     Box X =  142.086   Box Y =   83.337   Box Z =   78.678
+     Alpha =   90.000   Beta  =   90.000   Gamma =   90.000
+     NFFT1 =  144       NFFT2 =   84       NFFT3 =   80
+     Cutoff=    9.000   Tol   =0.100E-04
+     Ewald Coefficient =  0.30768
+     Interpolation order =    4
+| MONTE CARLO BAROSTAT IMPORTANT NOTE:
+|   The Monte-Carlo barostat does not require the virial to adjust the system volume.
+|   Since it is an expensive calculation, it is skipped for efficiency. A side-effect
+|   is that the reported pressure is always 0 because it is not calculated.
+
+--------------------------------------------------------------------------------
+   3.  ATOMIC COORDINATES AND VELOCITIES
+--------------------------------------------------------------------------------
+
+factor IX (ACTIVATED PROTEIN)                                                   
+ begin time read from input coords =  2542.675 ps
+
+ 
+ Number of triangulated 3-point waters found:    28358
+
+     Sum of charges from parm topology file =   0.00031225
+     Forcing neutrality...
+
+| Dynamic Memory, Types Used:
+| Reals             4017029
+| Integers          3382798
+
+| Nonbonded Pairs Initial Allocation:    20726568
+
+| GPU memory information (estimate):
+| KB of GPU memory in use:    276876
+| KB of CPU memory in use:    145164
+
+--------------------------------------------------------------------------------
+   4.  RESULTS
+--------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000239     0.00(Removed)
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =     2500   TIME(PS) =    2552.675  TEMP(K) =   300.16  PRESS =     0.0
+ Etot   =   -221789.5086  EKtot   =     55122.2695  EPtot      =   -276911.7781
+ BOND   =      1313.2367  ANGLE   =      3311.9794  DIHED      =     11215.8810
+ 1-4 NB =      1275.6234  1-4 EEL =     15071.9996  VDWAALS    =     36314.7175
+ EELEC  =   -345415.2155  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    931116.5139
+                                                    Density    =         0.9884
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =     5000   TIME(PS) =    2562.675  TEMP(K) =   300.23  PRESS =     0.0
+ Etot   =   -221971.3531  EKtot   =     55134.1758  EPtot      =   -277105.5289
+ BOND   =      1230.6959  ANGLE   =      3285.3076  DIHED      =     11215.6546
+ 1-4 NB =      1248.1859  1-4 EEL =     15071.5970  VDWAALS    =     36235.6970
+ EELEC  =   -345392.6669  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    929203.3794
+                                                    Density    =         0.9904
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =     7500   TIME(PS) =    2572.675  TEMP(K) =   300.19  PRESS =     0.0
+ Etot   =   -222161.1151  EKtot   =     55126.6992  EPtot      =   -277287.8144
+ BOND   =      1192.3844  ANGLE   =      3196.3139  DIHED      =     11179.0282
+ 1-4 NB =      1252.3512  1-4 EEL =     15013.0590  VDWAALS    =     35766.1934
+ EELEC  =   -344887.1445  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    926885.9139
+                                                    Density    =         0.9929
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    10000   TIME(PS) =    2582.675  TEMP(K) =   300.53  PRESS =     0.0
+ Etot   =   -222261.1945  EKtot   =     55189.4258  EPtot      =   -277450.6203
+ BOND   =      1273.9212  ANGLE   =      3220.6477  DIHED      =     11175.1785
+ 1-4 NB =      1249.9006  1-4 EEL =     15110.7730  VDWAALS    =     35809.1027
+ EELEC  =   -345290.1440  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    925897.1420
+                                                    Density    =         0.9940
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    12500   TIME(PS) =    2592.675  TEMP(K) =   300.16  PRESS =     0.0
+ Etot   =   -222436.1097  EKtot   =     55121.1133  EPtot      =   -277557.2230
+ BOND   =      1221.4367  ANGLE   =      3078.3010  DIHED      =     11117.2477
+ 1-4 NB =      1262.1464  1-4 EEL =     15128.6362  VDWAALS    =     35976.9175
+ EELEC  =   -345341.9084  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    923711.7374
+                                                    Density    =         0.9963
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    15000   TIME(PS) =    2602.675  TEMP(K) =   300.52  PRESS =     0.0
+ Etot   =   -222505.9108  EKtot   =     55186.8281  EPtot      =   -277692.7389
+ BOND   =      1264.4243  ANGLE   =      3082.7326  DIHED      =     11094.0300
+ 1-4 NB =      1215.0663  1-4 EEL =     15014.2261  VDWAALS    =     36105.1070
+ EELEC  =   -345468.3252  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    923502.7389
+                                                    Density    =         0.9965
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    17500   TIME(PS) =    2612.675  TEMP(K) =   302.37  PRESS =     0.0
+ Etot   =   -222708.0772  EKtot   =     55526.8906  EPtot      =   -278234.9678
+ BOND   =      1265.0611  ANGLE   =      3148.8036  DIHED      =     11193.8416
+ 1-4 NB =      1230.1363  1-4 EEL =     14981.7880  VDWAALS    =     36962.5663
+ EELEC  =   -347017.1646  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    918023.6517
+                                                    Density    =         1.0025
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    20000   TIME(PS) =    2622.675  TEMP(K) =   299.20  PRESS =     0.0
+ Etot   =   -222814.2505  EKtot   =     54945.6328  EPtot      =   -277759.8833
+ BOND   =      1221.1771  ANGLE   =      3116.6719  DIHED      =     11129.8966
+ 1-4 NB =      1256.6583  1-4 EEL =     14958.9786  VDWAALS    =     36460.3464
+ EELEC  =   -345903.6121  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    918179.0681
+                                                    Density    =         1.0023
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    22500   TIME(PS) =    2632.675  TEMP(K) =   300.57  PRESS =     0.0
+ Etot   =   -222969.7443  EKtot   =     55196.6172  EPtot      =   -278166.3615
+ BOND   =      1215.0983  ANGLE   =      3074.9155  DIHED      =     11144.6095
+ 1-4 NB =      1250.4260  1-4 EEL =     14937.4351  VDWAALS    =     36248.4547
+ EELEC  =   -346037.3005  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916969.7434
+                                                    Density    =         1.0036
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    25000   TIME(PS) =    2642.675  TEMP(K) =   299.72  PRESS =     0.0
+ Etot   =   -223021.0943  EKtot   =     55040.4609  EPtot      =   -278061.5553
+ BOND   =      1232.2000  ANGLE   =      3123.6813  DIHED      =     11119.2457
+ 1-4 NB =      1235.8301  1-4 EEL =     14980.1424  VDWAALS    =     36439.6106
+ EELEC  =   -346192.2653  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    917741.0290
+                                                    Density    =         1.0028
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    27500   TIME(PS) =    2652.675  TEMP(K) =   301.01  PRESS =     0.0
+ Etot   =   -223083.2855  EKtot   =     55277.2734  EPtot      =   -278360.5589
+ BOND   =      1193.0249  ANGLE   =      3143.5360  DIHED      =     11130.7455
+ 1-4 NB =      1274.7711  1-4 EEL =     15029.5439  VDWAALS    =     36483.5244
+ EELEC  =   -346615.7047  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    917236.1240
+                                                    Density    =         1.0033
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    30000   TIME(PS) =    2662.675  TEMP(K) =   299.44  PRESS =     0.0
+ Etot   =   -223128.0450  EKtot   =     54989.7656  EPtot      =   -278117.8106
+ BOND   =      1200.1482  ANGLE   =      3143.3546  DIHED      =     11104.2521
+ 1-4 NB =      1225.6699  1-4 EEL =     14982.8316  VDWAALS    =     36308.2246
+ EELEC  =   -346082.2916  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915814.1888
+                                                    Density    =         1.0049
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    32500   TIME(PS) =    2672.675  TEMP(K) =   300.12  PRESS =     0.0
+ Etot   =   -223166.8644  EKtot   =     55115.0312  EPtot      =   -278281.8956
+ BOND   =      1195.5811  ANGLE   =      3104.4348  DIHED      =     11091.4625
+ 1-4 NB =      1246.9428  1-4 EEL =     14973.9475  VDWAALS    =     36302.3115
+ EELEC  =   -346196.5758  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915984.3244
+                                                    Density    =         1.0047
+ ------------------------------------------------------------------------------
+
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+| MC Barostat: Decreasing size of volume moves
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    35000   TIME(PS) =    2682.675  TEMP(K) =   300.63  PRESS =     0.0
+ Etot   =   -223221.4181  EKtot   =     55207.2930  EPtot      =   -278428.7111
+ BOND   =      1156.1130  ANGLE   =      3126.7175  DIHED      =     11098.0222
+ 1-4 NB =      1254.2843  1-4 EEL =     15045.1558  VDWAALS    =     36223.4431
+ EELEC  =   -346332.4469  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916509.2469
+                                                    Density    =         1.0041
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    37500   TIME(PS) =    2692.675  TEMP(K) =   299.92  PRESS =     0.0
+ Etot   =   -223254.3833  EKtot   =     55077.3789  EPtot      =   -278331.7622
+ BOND   =      1198.1522  ANGLE   =      3092.2786  DIHED      =     11137.9059
+ 1-4 NB =      1233.4233  1-4 EEL =     14939.7132  VDWAALS    =     36332.2873
+ EELEC  =   -346265.5227  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915429.2581
+                                                    Density    =         1.0053
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    40000   TIME(PS) =    2702.675  TEMP(K) =   299.67  PRESS =     0.0
+ Etot   =   -223254.8319  EKtot   =     55032.3828  EPtot      =   -278287.2147
+ BOND   =      1247.8922  ANGLE   =      3148.8910  DIHED      =     11104.6489
+ 1-4 NB =      1234.0856  1-4 EEL =     14996.1046  VDWAALS    =     36594.5087
+ EELEC  =   -346613.3458  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915051.9646
+                                                    Density    =         1.0057
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    42500   TIME(PS) =    2712.675  TEMP(K) =   300.98  PRESS =     0.0
+ Etot   =   -223316.2803  EKtot   =     55272.3359  EPtot      =   -278588.6163
+ BOND   =      1165.3904  ANGLE   =      3134.7343  DIHED      =     11127.0884
+ 1-4 NB =      1273.8471  1-4 EEL =     14982.5268  VDWAALS    =     36540.6527
+ EELEC  =   -346812.8559  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    914489.2593
+                                                    Density    =         1.0064
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    45000   TIME(PS) =    2722.675  TEMP(K) =   301.33  PRESS =     0.0
+ Etot   =   -223402.9817  EKtot   =     55336.0664  EPtot      =   -278739.0481
+ BOND   =      1221.1028  ANGLE   =      3124.0178  DIHED      =     11104.8908
+ 1-4 NB =      1242.6041  1-4 EEL =     15025.5822  VDWAALS    =     36809.6363
+ EELEC  =   -347266.8822  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    912951.1616
+                                                    Density    =         1.0081
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    47500   TIME(PS) =    2732.675  TEMP(K) =   299.31  PRESS =     0.0
+ Etot   =   -223416.4664  EKtot   =     54965.8477  EPtot      =   -278382.3140
+ BOND   =      1194.8797  ANGLE   =      3174.9716  DIHED      =     11055.1906
+ 1-4 NB =      1239.5384  1-4 EEL =     15050.3607  VDWAALS    =     36406.1299
+ EELEC  =   -346503.3848  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    913875.8129
+                                                    Density    =         1.0070
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    50000   TIME(PS) =    2742.675  TEMP(K) =   300.76  PRESS =     0.0
+ Etot   =   -223399.9719  EKtot   =     55230.9844  EPtot      =   -278630.9563
+ BOND   =      1230.7457  ANGLE   =      3127.6922  DIHED      =     11121.3629
+ 1-4 NB =      1246.0915  1-4 EEL =     15105.3227  VDWAALS    =     36452.5639
+ EELEC  =   -346914.7351  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    914969.6917
+                                                    Density    =         1.0058
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    52500   TIME(PS) =    2752.675  TEMP(K) =   301.37  PRESS =     0.0
+ Etot   =   -223425.5059  EKtot   =     55343.8125  EPtot      =   -278769.3184
+ BOND   =      1234.6020  ANGLE   =      3032.6910  DIHED      =     11112.0749
+ 1-4 NB =      1215.9671  1-4 EEL =     15022.2220  VDWAALS    =     36772.5335
+ EELEC  =   -347159.4089  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    914964.0165
+                                                    Density    =         1.0058
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    55000   TIME(PS) =    2762.675  TEMP(K) =   299.20  PRESS =     0.0
+ Etot   =   -223421.3630  EKtot   =     54945.1367  EPtot      =   -278366.4997
+ BOND   =      1266.3133  ANGLE   =      3091.1613  DIHED      =     11138.9809
+ 1-4 NB =      1247.2584  1-4 EEL =     15006.9038  VDWAALS    =     36517.4592
+ EELEC  =   -346634.5766  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    914231.2242
+                                                    Density    =         1.0066
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    57500   TIME(PS) =    2772.675  TEMP(K) =   300.45  PRESS =     0.0
+ Etot   =   -223379.2720  EKtot   =     55173.8594  EPtot      =   -278553.1314
+ BOND   =      1244.3136  ANGLE   =      3093.6079  DIHED      =     11110.0457
+ 1-4 NB =      1234.4761  1-4 EEL =     14976.8540  VDWAALS    =     36532.6512
+ EELEC  =   -346745.0800  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915709.9600
+                                                    Density    =         1.0050
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    60000   TIME(PS) =    2782.675  TEMP(K) =   300.98  PRESS =     0.0
+ Etot   =   -223355.6676  EKtot   =     55272.8828  EPtot      =   -278628.5504
+ BOND   =      1247.8861  ANGLE   =      3075.7538  DIHED      =     11120.6477
+ 1-4 NB =      1232.1779  1-4 EEL =     15012.1698  VDWAALS    =     36470.1494
+ EELEC  =   -346787.3350  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916374.9007
+                                                    Density    =         1.0043
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    62500   TIME(PS) =    2792.675  TEMP(K) =   299.45  PRESS =     0.0
+ Etot   =   -223379.1397  EKtot   =     54990.3711  EPtot      =   -278369.5108
+ BOND   =      1251.3204  ANGLE   =      3101.1980  DIHED      =     11128.4963
+ 1-4 NB =      1232.1393  1-4 EEL =     15043.1548  VDWAALS    =     36063.5125
+ EELEC  =   -346189.3320  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915193.3778
+                                                    Density    =         1.0056
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    65000   TIME(PS) =    2802.675  TEMP(K) =   299.07  PRESS =     0.0
+ Etot   =   -223362.2910  EKtot   =     54920.4414  EPtot      =   -278282.7324
+ BOND   =      1208.8282  ANGLE   =      3039.0545  DIHED      =     11090.7302
+ 1-4 NB =      1232.6630  1-4 EEL =     15052.9722  VDWAALS    =     36880.9359
+ EELEC  =   -346787.9165  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915623.8379
+                                                    Density    =         1.0051
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    67500   TIME(PS) =    2812.675  TEMP(K) =   301.03  PRESS =     0.0
+ Etot   =   -223419.5850  EKtot   =     55280.6328  EPtot      =   -278700.2178
+ BOND   =      1189.5592  ANGLE   =      3118.5114  DIHED      =     11090.1274
+ 1-4 NB =      1256.3719  1-4 EEL =     14983.7688  VDWAALS    =     36849.5945
+ EELEC  =   -347188.1511  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    914398.7967
+                                                    Density    =         1.0065
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    70000   TIME(PS) =    2822.675  TEMP(K) =   299.82  PRESS =     0.0
+ Etot   =   -223324.4875  EKtot   =     55058.7891  EPtot      =   -278383.2766
+ BOND   =      1224.6857  ANGLE   =      3085.9908  DIHED      =     11128.3133
+ 1-4 NB =      1257.9460  1-4 EEL =     15085.4055  VDWAALS    =     36160.9850
+ EELEC  =   -346326.6029  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    917434.7624
+                                                    Density    =         1.0031
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    72500   TIME(PS) =    2832.675  TEMP(K) =   299.54  PRESS =     0.0
+ Etot   =   -223343.1825  EKtot   =     55007.2617  EPtot      =   -278350.4442
+ BOND   =      1233.0144  ANGLE   =      3171.5739  DIHED      =     11101.7303
+ 1-4 NB =      1232.0255  1-4 EEL =     15019.0602  VDWAALS    =     36731.9620
+ EELEC  =   -346839.8105  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915507.5079
+                                                    Density    =         1.0052
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    75000   TIME(PS) =    2842.675  TEMP(K) =   301.37  PRESS =     0.0
+ Etot   =   -223373.5506  EKtot   =     55343.5117  EPtot      =   -278717.0623
+ BOND   =      1231.3705  ANGLE   =      3073.3076  DIHED      =     11071.0333
+ 1-4 NB =      1233.8810  1-4 EEL =     15080.8735  VDWAALS    =     36713.9681
+ EELEC  =   -347121.4964  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    914868.5506
+                                                    Density    =         1.0059
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    77500   TIME(PS) =    2852.675  TEMP(K) =   298.90  PRESS =     0.0
+ Etot   =   -223368.8305  EKtot   =     54889.5273  EPtot      =   -278258.3578
+ BOND   =      1214.0533  ANGLE   =      3044.2019  DIHED      =     11088.1454
+ 1-4 NB =      1236.4891  1-4 EEL =     15062.2537  VDWAALS    =     36396.6547
+ EELEC  =   -346300.1559  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915078.7119
+                                                    Density    =         1.0057
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    80000   TIME(PS) =    2862.675  TEMP(K) =   299.39  PRESS =     0.0
+ Etot   =   -223386.8880  EKtot   =     54979.7656  EPtot      =   -278366.6537
+ BOND   =      1204.1630  ANGLE   =      3068.7538  DIHED      =     11129.5282
+ 1-4 NB =      1249.8912  1-4 EEL =     15076.1374  VDWAALS    =     36693.8643
+ EELEC  =   -346788.9915  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    914970.3902
+                                                    Density    =         1.0058
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    82500   TIME(PS) =    2872.675  TEMP(K) =   301.26  PRESS =     0.0
+ Etot   =   -223458.7155  EKtot   =     55323.0586  EPtot      =   -278781.7741
+ BOND   =      1202.4620  ANGLE   =      3119.8095  DIHED      =     11082.5143
+ 1-4 NB =      1233.4094  1-4 EEL =     15048.9808  VDWAALS    =     36462.1488
+ EELEC  =   -346931.0990  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    913217.7723
+                                                    Density    =         1.0078
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    85000   TIME(PS) =    2882.675  TEMP(K) =   299.12  PRESS =     0.0
+ Etot   =   -223417.3491  EKtot   =     54930.0039  EPtot      =   -278347.3530
+ BOND   =      1240.1177  ANGLE   =      3107.7690  DIHED      =     11071.1094
+ 1-4 NB =      1241.1763  1-4 EEL =     15022.4074  VDWAALS    =     36535.5179
+ EELEC  =   -346565.4507  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    914710.9549
+                                                    Density    =         1.0061
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    87500   TIME(PS) =    2892.675  TEMP(K) =   299.50  PRESS =     0.0
+ Etot   =   -223300.3327  EKtot   =     54999.9414  EPtot      =   -278300.2741
+ BOND   =      1213.0865  ANGLE   =      3091.0854  DIHED      =     11080.3677
+ 1-4 NB =      1264.9495  1-4 EEL =     14978.4912  VDWAALS    =     36371.4864
+ EELEC  =   -346299.7408  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    918794.4401
+                                                    Density    =         1.0016
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    90000   TIME(PS) =    2902.675  TEMP(K) =   298.88  PRESS =     0.0
+ Etot   =   -223252.7083  EKtot   =     54885.9570  EPtot      =   -278138.6653
+ BOND   =      1227.6648  ANGLE   =      3177.3686  DIHED      =     11038.0894
+ 1-4 NB =      1215.1446  1-4 EEL =     14950.1773  VDWAALS    =     36419.1884
+ EELEC  =   -346166.2983  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    917583.2502
+                                                    Density    =         1.0030
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    92500   TIME(PS) =    2912.675  TEMP(K) =   299.93  PRESS =     0.0
+ Etot   =   -223279.1673  EKtot   =     55079.9336  EPtot      =   -278359.1009
+ BOND   =      1227.9954  ANGLE   =      3037.4936  DIHED      =     11084.8853
+ 1-4 NB =      1241.5207  1-4 EEL =     15168.3556  VDWAALS    =     37062.9316
+ EELEC  =   -347182.2833  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915575.1620
+                                                    Density    =         1.0052
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    95000   TIME(PS) =    2922.675  TEMP(K) =   300.06  PRESS =     0.0
+ Etot   =   -223280.1634  EKtot   =     55103.1680  EPtot      =   -278383.3313
+ BOND   =      1191.9036  ANGLE   =      3113.0785  DIHED      =     11075.6850
+ 1-4 NB =      1243.4300  1-4 EEL =     15065.7424  VDWAALS    =     35682.3473
+ EELEC  =   -345755.5182  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916231.0668
+                                                    Density    =         1.0044
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =    97500   TIME(PS) =    2932.675  TEMP(K) =   298.87  PRESS =     0.0
+ Etot   =   -223296.8012  EKtot   =     54884.5352  EPtot      =   -278181.3363
+ BOND   =      1210.6874  ANGLE   =      3118.5354  DIHED      =     11139.5888
+ 1-4 NB =      1225.0434  1-4 EEL =     15027.7760  VDWAALS    =     36567.7359
+ EELEC  =   -346470.7031  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    914715.6153
+                                                    Density    =         1.0061
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   100000   TIME(PS) =    2942.675  TEMP(K) =   300.63  PRESS =     0.0
+ Etot   =   -223334.9374  EKtot   =     55208.6367  EPtot      =   -278543.5741
+ BOND   =      1263.8380  ANGLE   =      3054.6316  DIHED      =     11096.9553
+ 1-4 NB =      1242.1691  1-4 EEL =     15097.6307  VDWAALS    =     36376.8987
+ EELEC  =   -346675.6975  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    914835.5331
+                                                    Density    =         1.0060
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   102500   TIME(PS) =    2952.675  TEMP(K) =   300.43  PRESS =     0.0
+ Etot   =   -223410.4819  EKtot   =     55170.3242  EPtot      =   -278580.8061
+ BOND   =      1214.4761  ANGLE   =      3089.2366  DIHED      =     11106.3098
+ 1-4 NB =      1225.5358  1-4 EEL =     15156.8863  VDWAALS    =     36819.3164
+ EELEC  =   -347192.5672  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    913466.6275
+                                                    Density    =         1.0075
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   105000   TIME(PS) =    2962.675  TEMP(K) =   299.39  PRESS =     0.0
+ Etot   =   -223407.7176  EKtot   =     54979.2031  EPtot      =   -278386.9207
+ BOND   =      1238.6382  ANGLE   =      3063.6030  DIHED      =     11072.7739
+ 1-4 NB =      1227.5449  1-4 EEL =     15017.3107  VDWAALS    =     36257.3976
+ EELEC  =   -346264.1890  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915156.6056
+                                                    Density    =         1.0056
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   107500   TIME(PS) =    2972.675  TEMP(K) =   299.69  PRESS =     0.0
+ Etot   =   -223401.5144  EKtot   =     55034.9727  EPtot      =   -278436.4871
+ BOND   =      1211.7663  ANGLE   =      3061.8392  DIHED      =     11109.1892
+ 1-4 NB =      1234.0058  1-4 EEL =     15132.4727  VDWAALS    =     36511.1135
+ EELEC  =   -346696.8738  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915691.4661
+                                                    Density    =         1.0050
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   110000   TIME(PS) =    2982.675  TEMP(K) =   301.96  PRESS =     0.0
+ Etot   =   -223417.1456  EKtot   =     55451.3594  EPtot      =   -278868.5049
+ BOND   =      1198.5607  ANGLE   =      3149.2038  DIHED      =     11140.2519
+ 1-4 NB =      1235.5793  1-4 EEL =     15089.1699  VDWAALS    =     36377.0712
+ EELEC  =   -347058.3417  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915515.3504
+                                                    Density    =         1.0052
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   112500   TIME(PS) =    2992.675  TEMP(K) =   300.29  PRESS =     0.0
+ Etot   =   -223399.6459  EKtot   =     55144.7773  EPtot      =   -278544.4233
+ BOND   =      1199.4111  ANGLE   =      3158.7730  DIHED      =     11116.0793
+ 1-4 NB =      1260.0164  1-4 EEL =     15091.2994  VDWAALS    =     36630.1144
+ EELEC  =   -347000.1169  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916501.7157
+                                                    Density    =         1.0042
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   115000   TIME(PS) =    3002.675  TEMP(K) =   300.78  PRESS =     0.0
+ Etot   =   -223415.4747  EKtot   =     55235.0898  EPtot      =   -278650.5646
+ BOND   =      1181.2847  ANGLE   =      3036.9641  DIHED      =     11140.7012
+ 1-4 NB =      1253.4638  1-4 EEL =     15108.2688  VDWAALS    =     36348.4929
+ EELEC  =   -346719.7401  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915529.5477
+                                                    Density    =         1.0052
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   117500   TIME(PS) =    3012.675  TEMP(K) =   300.74  PRESS =     0.0
+ Etot   =   -223402.8811  EKtot   =     55228.6133  EPtot      =   -278631.4944
+ BOND   =      1193.3384  ANGLE   =      3176.8695  DIHED      =     11045.1369
+ 1-4 NB =      1251.3301  1-4 EEL =     15079.8230  VDWAALS    =     36208.3005
+ EELEC  =   -346586.2927  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915741.8785
+                                                    Density    =         1.0050
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   120000   TIME(PS) =    3022.675  TEMP(K) =   300.25  PRESS =     0.0
+ Etot   =   -223412.1701  EKtot   =     55138.7383  EPtot      =   -278550.9084
+ BOND   =      1215.8849  ANGLE   =      3024.5179  DIHED      =     11108.1225
+ 1-4 NB =      1244.3436  1-4 EEL =     15068.7894  VDWAALS    =     35963.3326
+ EELEC  =   -346175.8992  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    914275.3164
+                                                    Density    =         1.0066
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   122500   TIME(PS) =    3032.675  TEMP(K) =   300.50  PRESS =     0.0
+ Etot   =   -223431.4648  EKtot   =     55183.7656  EPtot      =   -278615.2305
+ BOND   =      1214.8907  ANGLE   =      3048.3796  DIHED      =     11075.2819
+ 1-4 NB =      1214.0679  1-4 EEL =     15113.2463  VDWAALS    =     36283.5156
+ EELEC  =   -346564.6123  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    914957.4152
+                                                    Density    =         1.0058
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   125000   TIME(PS) =    3042.675  TEMP(K) =   299.95  PRESS =     0.0
+ Etot   =   -223412.2787  EKtot   =     55082.3594  EPtot      =   -278494.6381
+ BOND   =      1175.2598  ANGLE   =      3100.2566  DIHED      =     11094.5558
+ 1-4 NB =      1249.7192  1-4 EEL =     15111.3405  VDWAALS    =     36715.3100
+ EELEC  =   -346941.0799  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915224.2126
+                                                    Density    =         1.0056
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   127500   TIME(PS) =    3052.675  TEMP(K) =   300.20  PRESS =     0.0
+ Etot   =   -223360.8978  EKtot   =     55128.3438  EPtot      =   -278489.2415
+ BOND   =      1204.5456  ANGLE   =      3126.4552  DIHED      =     11095.9505
+ 1-4 NB =      1238.0637  1-4 EEL =     15058.4349  VDWAALS    =     36312.7524
+ EELEC  =   -346525.4438  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915642.8396
+                                                    Density    =         1.0051
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   130000   TIME(PS) =    3062.675  TEMP(K) =   299.22  PRESS =     0.0
+ Etot   =   -223332.1097  EKtot   =     54949.5273  EPtot      =   -278281.6371
+ BOND   =      1281.2635  ANGLE   =      3111.1955  DIHED      =     11098.2161
+ 1-4 NB =      1230.5817  1-4 EEL =     15091.2430  VDWAALS    =     36401.1509
+ EELEC  =   -346495.2879  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916042.8623
+                                                    Density    =         1.0047
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   132500   TIME(PS) =    3072.675  TEMP(K) =   299.77  PRESS =     0.0
+ Etot   =   -223357.9586  EKtot   =     55049.8828  EPtot      =   -278407.8414
+ BOND   =      1210.0269  ANGLE   =      3075.4947  DIHED      =     11036.1988
+ 1-4 NB =      1225.9932  1-4 EEL =     15066.3369  VDWAALS    =     36540.8753
+ EELEC  =   -346562.7672  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915422.4278
+                                                    Density    =         1.0053
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   135000   TIME(PS) =    3082.675  TEMP(K) =   299.31  PRESS =     0.0
+ Etot   =   -223312.3540  EKtot   =     54965.2656  EPtot      =   -278277.6197
+ BOND   =      1293.0873  ANGLE   =      3051.0555  DIHED      =     11099.5317
+ 1-4 NB =      1231.1068  1-4 EEL =     15077.4717  VDWAALS    =     36079.4232
+ EELEC  =   -346109.2958  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    917818.9245
+                                                    Density    =         1.0027
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   137500   TIME(PS) =    3092.675  TEMP(K) =   299.35  PRESS =     0.0
+ Etot   =   -223270.0246  EKtot   =     54972.3711  EPtot      =   -278242.3957
+ BOND   =      1249.3705  ANGLE   =      3026.9355  DIHED      =     11088.3317
+ 1-4 NB =      1215.8734  1-4 EEL =     15105.2509  VDWAALS    =     36373.2508
+ EELEC  =   -346301.4086  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    918098.6346
+                                                    Density    =         1.0024
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   140000   TIME(PS) =    3102.675  TEMP(K) =   301.04  PRESS =     0.0
+ Etot   =   -223289.1894  EKtot   =     55282.3867  EPtot      =   -278571.5762
+ BOND   =      1229.7160  ANGLE   =      3109.4862  DIHED      =     11088.6921
+ 1-4 NB =      1231.8962  1-4 EEL =     15021.7294  VDWAALS    =     36549.6353
+ EELEC  =   -346802.7314  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    917060.0918
+                                                    Density    =         1.0035
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   142500   TIME(PS) =    3112.675  TEMP(K) =   300.21  PRESS =     0.0
+ Etot   =   -223300.4874  EKtot   =     55130.3789  EPtot      =   -278430.8663
+ BOND   =      1262.1977  ANGLE   =      3137.4804  DIHED      =     11116.5665
+ 1-4 NB =      1261.9603  1-4 EEL =     15057.3951  VDWAALS    =     36317.7062
+ EELEC  =   -346584.1726  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916499.5711
+                                                    Density    =         1.0042
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   145000   TIME(PS) =    3122.675  TEMP(K) =   299.93  PRESS =     0.0
+ Etot   =   -223254.2797  EKtot   =     55079.4062  EPtot      =   -278333.6860
+ BOND   =      1247.0844  ANGLE   =      3140.5524  DIHED      =     11123.1859
+ 1-4 NB =      1251.7339  1-4 EEL =     15027.8582  VDWAALS    =     36526.4225
+ EELEC  =   -346650.5233  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    918046.7977
+                                                    Density    =         1.0025
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   147500   TIME(PS) =    3132.675  TEMP(K) =   300.66  PRESS =     0.0
+ Etot   =   -223250.2074  EKtot   =     55214.0820  EPtot      =   -278464.2894
+ BOND   =      1179.5255  ANGLE   =      3063.4155  DIHED      =     11067.7559
+ 1-4 NB =      1251.1768  1-4 EEL =     15017.6131  VDWAALS    =     36206.2671
+ EELEC  =   -346250.0433  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    918697.4123
+                                                    Density    =         1.0018
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   150000   TIME(PS) =    3142.675  TEMP(K) =   300.44  PRESS =     0.0
+ Etot   =   -223209.1360  EKtot   =     55172.3359  EPtot      =   -278381.4719
+ BOND   =      1223.4428  ANGLE   =      3093.0289  DIHED      =     11069.0748
+ 1-4 NB =      1206.6427  1-4 EEL =     15031.6576  VDWAALS    =     36655.2746
+ EELEC  =   -346660.5933  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    918827.1128
+                                                    Density    =         1.0016
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   152500   TIME(PS) =    3152.675  TEMP(K) =   299.23  PRESS =     0.0
+ Etot   =   -223228.9736  EKtot   =     54951.0391  EPtot      =   -278180.0126
+ BOND   =      1246.4099  ANGLE   =      3088.8673  DIHED      =     11100.5300
+ 1-4 NB =      1259.8018  1-4 EEL =     15028.2512  VDWAALS    =     36738.7019
+ EELEC  =   -346642.5747  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    917109.8254
+                                                    Density    =         1.0035
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   155000   TIME(PS) =    3162.675  TEMP(K) =   299.81  PRESS =     0.0
+ Etot   =   -223188.0784  EKtot   =     55056.8711  EPtot      =   -278244.9495
+ BOND   =      1223.3976  ANGLE   =      3011.4392  DIHED      =     11108.7595
+ 1-4 NB =      1229.6340  1-4 EEL =     15025.5716  VDWAALS    =     36110.6588
+ EELEC  =   -345954.4101  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    919365.8712
+                                                    Density    =         1.0010
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   157500   TIME(PS) =    3172.675  TEMP(K) =   298.76  PRESS =     0.0
+ Etot   =   -223114.1265  EKtot   =     54864.8672  EPtot      =   -277978.9937
+ BOND   =      1226.0679  ANGLE   =      3141.3838  DIHED      =     11081.1518
+ 1-4 NB =      1224.4914  1-4 EEL =     14938.1995  VDWAALS    =     36408.6893
+ EELEC  =   -345998.9774  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    920675.3392
+                                                    Density    =         0.9996
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   160000   TIME(PS) =    3182.675  TEMP(K) =   299.40  PRESS =     0.0
+ Etot   =   -223167.4584  EKtot   =     54981.3438  EPtot      =   -278148.8021
+ BOND   =      1231.5722  ANGLE   =      3047.9535  DIHED      =     11067.3415
+ 1-4 NB =      1237.4676  1-4 EEL =     15024.6156  VDWAALS    =     36459.9598
+ EELEC  =   -346217.7124  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    917715.1257
+                                                    Density    =         1.0028
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   162500   TIME(PS) =    3192.675  TEMP(K) =   299.76  PRESS =     0.0
+ Etot   =   -223230.0383  EKtot   =     55047.5117  EPtot      =   -278277.5501
+ BOND   =      1238.8769  ANGLE   =      3096.0724  DIHED      =     11103.4963
+ 1-4 NB =      1258.6808  1-4 EEL =     14995.6227  VDWAALS    =     36083.6437
+ EELEC  =   -346053.9428  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916144.7230
+                                                    Density    =         1.0045
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   165000   TIME(PS) =    3202.675  TEMP(K) =   298.54  PRESS =     0.0
+ Etot   =   -223213.3655  EKtot   =     54823.4102  EPtot      =   -278036.7757
+ BOND   =      1200.1206  ANGLE   =      3122.4122  DIHED      =     11089.8346
+ 1-4 NB =      1239.8284  1-4 EEL =     15065.6895  VDWAALS    =     36174.2898
+ EELEC  =   -345928.9508  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    917022.0581
+                                                    Density    =         1.0036
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   167500   TIME(PS) =    3212.675  TEMP(K) =   299.50  PRESS =     0.0
+ Etot   =   -223178.8577  EKtot   =     54999.3711  EPtot      =   -278178.2288
+ BOND   =      1181.0699  ANGLE   =      3073.8058  DIHED      =     11108.0139
+ 1-4 NB =      1247.9773  1-4 EEL =     15079.1442  VDWAALS    =     36528.7051
+ EELEC  =   -346396.9450  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    917414.0020
+                                                    Density    =         1.0032
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   170000   TIME(PS) =    3222.675  TEMP(K) =   300.09  PRESS =     0.0
+ Etot   =   -223205.1469  EKtot   =     55107.8242  EPtot      =   -278312.9711
+ BOND   =      1204.9166  ANGLE   =      3126.9006  DIHED      =     11042.6207
+ 1-4 NB =      1233.1508  1-4 EEL =     14945.3697  VDWAALS    =     36235.6632
+ EELEC  =   -346101.5928  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916553.8640
+                                                    Density    =         1.0041
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   172500   TIME(PS) =    3232.675  TEMP(K) =   299.40  PRESS =     0.0
+ Etot   =   -223275.8566  EKtot   =     54981.4258  EPtot      =   -278257.2824
+ BOND   =      1200.0573  ANGLE   =      3104.2256  DIHED      =     11031.9337
+ 1-4 NB =      1262.7723  1-4 EEL =     15025.9987  VDWAALS    =     36676.0168
+ EELEC  =   -346558.2869  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915499.8339
+                                                    Density    =         1.0053
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   175000   TIME(PS) =    3242.675  TEMP(K) =   299.57  PRESS =     0.0
+ Etot   =   -223260.2943  EKtot   =     55012.5430  EPtot      =   -278272.8372
+ BOND   =      1261.7818  ANGLE   =      3123.4238  DIHED      =     11064.0026
+ 1-4 NB =      1262.6792  1-4 EEL =     15084.3138  VDWAALS    =     36429.4386
+ EELEC  =   -346498.4771  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916736.9223
+                                                    Density    =         1.0039
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   177500   TIME(PS) =    3252.675  TEMP(K) =   301.19  PRESS =     0.0
+ Etot   =   -223293.3797  EKtot   =     55310.0312  EPtot      =   -278603.4110
+ BOND   =      1152.9581  ANGLE   =      3115.3610  DIHED      =     11087.2061
+ 1-4 NB =      1257.3697  1-4 EEL =     15098.2935  VDWAALS    =     36628.1654
+ EELEC  =   -346942.7648  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916753.5681
+                                                    Density    =         1.0039
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   180000   TIME(PS) =    3262.675  TEMP(K) =   299.28  PRESS =     0.0
+ Etot   =   -223264.4318  EKtot   =     54959.4062  EPtot      =   -278223.8380
+ BOND   =      1195.5608  ANGLE   =      3086.0646  DIHED      =     11048.9594
+ 1-4 NB =      1257.5218  1-4 EEL =     15093.7132  VDWAALS    =     36420.4224
+ EELEC  =   -346326.0802  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    917508.7495
+                                                    Density    =         1.0030
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   182500   TIME(PS) =    3272.675  TEMP(K) =   300.20  PRESS =     0.0
+ Etot   =   -223230.6317  EKtot   =     55129.2031  EPtot      =   -278359.8349
+ BOND   =      1247.8624  ANGLE   =      3040.5578  DIHED      =     11112.3367
+ 1-4 NB =      1224.8661  1-4 EEL =     15038.8538  VDWAALS    =     36346.6429
+ EELEC  =   -346370.9545  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    917790.2925
+                                                    Density    =         1.0027
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   185000   TIME(PS) =    3282.675  TEMP(K) =   299.55  PRESS =     0.0
+ Etot   =   -223218.2674  EKtot   =     55009.7148  EPtot      =   -278227.9822
+ BOND   =      1221.0350  ANGLE   =      3102.0271  DIHED      =     11078.4273
+ 1-4 NB =      1232.2626  1-4 EEL =     15094.1187  VDWAALS    =     35936.4167
+ EELEC  =   -345892.2696  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    919182.8907
+                                                    Density    =         1.0012
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   187500   TIME(PS) =    3292.675  TEMP(K) =   299.51  PRESS =     0.0
+ Etot   =   -223241.9104  EKtot   =     55001.9219  EPtot      =   -278243.8323
+ BOND   =      1254.4219  ANGLE   =      3116.5990  DIHED      =     11029.5880
+ 1-4 NB =      1254.7725  1-4 EEL =     15018.1049  VDWAALS    =     36305.0071
+ EELEC  =   -346222.3256  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916828.4864
+                                                    Density    =         1.0038
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   190000   TIME(PS) =    3302.675  TEMP(K) =   300.13  PRESS =     0.0
+ Etot   =   -223216.6829  EKtot   =     55116.6680  EPtot      =   -278333.3509
+ BOND   =      1237.9454  ANGLE   =      3086.2123  DIHED      =     11065.5039
+ 1-4 NB =      1241.2669  1-4 EEL =     15165.4721  VDWAALS    =     36169.6203
+ EELEC  =   -346299.3718  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    917235.5604
+                                                    Density    =         1.0033
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   192500   TIME(PS) =    3312.675  TEMP(K) =   299.95  PRESS =     0.0
+ Etot   =   -223221.9066  EKtot   =     55082.7188  EPtot      =   -278304.6254
+ BOND   =      1241.3904  ANGLE   =      3086.7305  DIHED      =     11091.4927
+ 1-4 NB =      1243.0224  1-4 EEL =     15035.9416  VDWAALS    =     36749.8063
+ EELEC  =   -346753.0092  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916949.4245
+                                                    Density    =         1.0037
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   195000   TIME(PS) =    3322.675  TEMP(K) =   299.04  PRESS =     0.0
+ Etot   =   -223212.6633  EKtot   =     54915.6094  EPtot      =   -278128.2727
+ BOND   =      1234.2641  ANGLE   =      3071.1201  DIHED      =     11053.4434
+ 1-4 NB =      1238.1407  1-4 EEL =     15121.9499  VDWAALS    =     36451.7865
+ EELEC  =   -346298.9774  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    917275.5391
+                                                    Density    =         1.0033
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   197500   TIME(PS) =    3332.675  TEMP(K) =   299.79  PRESS =     0.0
+ Etot   =   -223212.1846  EKtot   =     55054.0586  EPtot      =   -278266.2432
+ BOND   =      1183.0821  ANGLE   =      3141.6461  DIHED      =     11062.9636
+ 1-4 NB =      1239.6213  1-4 EEL =     15144.4845  VDWAALS    =     36543.6472
+ EELEC  =   -346581.6880  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916931.4089
+                                                    Density    =         1.0037
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   200000   TIME(PS) =    3342.675  TEMP(K) =   300.80  PRESS =     0.0
+ Etot   =   -223240.9560  EKtot   =     55238.3984  EPtot      =   -278479.3544
+ BOND   =      1164.2797  ANGLE   =      3096.1048  DIHED      =     11021.9181
+ 1-4 NB =      1235.8332  1-4 EEL =     15086.3713  VDWAALS    =     36485.0335
+ EELEC  =   -346568.8951  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916828.3163
+                                                    Density    =         1.0038
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   202500   TIME(PS) =    3352.675  TEMP(K) =   299.71  PRESS =     0.0
+ Etot   =   -223149.4292  EKtot   =     55039.7656  EPtot      =   -278189.1948
+ BOND   =      1260.2485  ANGLE   =      3152.2956  DIHED      =     11092.8829
+ 1-4 NB =      1227.0140  1-4 EEL =     15087.4502  VDWAALS    =     36431.2257
+ EELEC  =   -346440.3117  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    919119.5432
+                                                    Density    =         1.0013
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   205000   TIME(PS) =    3362.675  TEMP(K) =   299.93  PRESS =     0.0
+ Etot   =   -223155.8891  EKtot   =     55079.2500  EPtot      =   -278235.1391
+ BOND   =      1280.1060  ANGLE   =      3128.4188  DIHED      =     11089.0577
+ 1-4 NB =      1232.4602  1-4 EEL =     15068.8527  VDWAALS    =     36266.3140
+ EELEC  =   -346300.3486  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    918505.3188
+                                                    Density    =         1.0020
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   207500   TIME(PS) =    3372.675  TEMP(K) =   300.71  PRESS =     0.0
+ Etot   =   -223199.4210  EKtot   =     55222.0430  EPtot      =   -278421.4639
+ BOND   =      1257.2071  ANGLE   =      3038.8634  DIHED      =     11070.2609
+ 1-4 NB =      1235.8072  1-4 EEL =     15045.8344  VDWAALS    =     36497.1465
+ EELEC  =   -346566.5834  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    917802.9698
+                                                    Density    =         1.0027
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   210000   TIME(PS) =    3382.675  TEMP(K) =   301.42  PRESS =     0.0
+ Etot   =   -223322.3193  EKtot   =     55352.5234  EPtot      =   -278674.8427
+ BOND   =      1246.0527  ANGLE   =      3163.4053  DIHED      =     11063.3390
+ 1-4 NB =      1247.4228  1-4 EEL =     15025.4965  VDWAALS    =     36946.3245
+ EELEC  =   -347366.8835  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    914762.8216
+                                                    Density    =         1.0061
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   212500   TIME(PS) =    3392.675  TEMP(K) =   299.56  PRESS =     0.0
+ Etot   =   -223377.1360  EKtot   =     55011.2852  EPtot      =   -278388.4212
+ BOND   =      1229.1233  ANGLE   =      3059.6681  DIHED      =     11081.8187
+ 1-4 NB =      1260.8962  1-4 EEL =     15079.9692  VDWAALS    =     36270.7628
+ EELEC  =   -346370.6595  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    914407.4293
+                                                    Density    =         1.0065
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   215000   TIME(PS) =    3402.675  TEMP(K) =   300.11  PRESS =     0.0
+ Etot   =   -223292.7047  EKtot   =     55111.7539  EPtot      =   -278404.4586
+ BOND   =      1166.1017  ANGLE   =      3090.8960  DIHED      =     11082.5026
+ 1-4 NB =      1241.1248  1-4 EEL =     15065.6137  VDWAALS    =     36725.9944
+ EELEC  =   -346776.6919  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    917094.5376
+                                                    Density    =         1.0035
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   217500   TIME(PS) =    3412.675  TEMP(K) =   299.58  PRESS =     0.0
+ Etot   =   -223264.6642  EKtot   =     55015.1992  EPtot      =   -278279.8634
+ BOND   =      1202.0030  ANGLE   =      3134.7877  DIHED      =     11064.3629
+ 1-4 NB =      1213.7976  1-4 EEL =     15002.0024  VDWAALS    =     36308.1455
+ EELEC  =   -346204.9626  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    917893.4340
+                                                    Density    =         1.0026
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   220000   TIME(PS) =    3422.675  TEMP(K) =   299.73  PRESS =     0.0
+ Etot   =   -223232.7468  EKtot   =     55042.5117  EPtot      =   -278275.2585
+ BOND   =      1302.1398  ANGLE   =      3096.6895  DIHED      =     11040.7076
+ 1-4 NB =      1234.5712  1-4 EEL =     15019.8856  VDWAALS    =     36707.5255
+ EELEC  =   -346676.7777  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    917601.7127
+                                                    Density    =         1.0029
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   222500   TIME(PS) =    3432.675  TEMP(K) =   300.07  PRESS =     0.0
+ Etot   =   -223233.5583  EKtot   =     55104.6953  EPtot      =   -278338.2537
+ BOND   =      1235.6505  ANGLE   =      3082.6140  DIHED      =     11038.7626
+ 1-4 NB =      1232.1749  1-4 EEL =     15044.7470  VDWAALS    =     36711.4764
+ EELEC  =   -346683.6790  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    917474.8592
+                                                    Density    =         1.0031
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   225000   TIME(PS) =    3442.675  TEMP(K) =   299.55  PRESS =     0.0
+ Etot   =   -223191.7920  EKtot   =     55008.9023  EPtot      =   -278200.6943
+ BOND   =      1274.3695  ANGLE   =      3081.3225  DIHED      =     11068.4071
+ 1-4 NB =      1210.0698  1-4 EEL =     15053.0829  VDWAALS    =     36024.0428
+ EELEC  =   -345911.9890  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    918446.8489
+                                                    Density    =         1.0020
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   227500   TIME(PS) =    3452.675  TEMP(K) =   299.53  PRESS =     0.0
+ Etot   =   -223174.4200  EKtot   =     55005.2773  EPtot      =   -278179.6973
+ BOND   =      1145.4161  ANGLE   =      3102.5437  DIHED      =     11089.7217
+ 1-4 NB =      1263.2801  1-4 EEL =     15067.0513  VDWAALS    =     36660.2804
+ EELEC  =   -346507.9907  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    918966.5292
+                                                    Density    =         1.0015
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   230000   TIME(PS) =    3462.675  TEMP(K) =   300.22  PRESS =     0.0
+ Etot   =   -223187.8716  EKtot   =     55133.4141  EPtot      =   -278321.2857
+ BOND   =      1213.3559  ANGLE   =      3141.0621  DIHED      =     11082.4163
+ 1-4 NB =      1233.6412  1-4 EEL =     15018.0213  VDWAALS    =     36115.4115
+ EELEC  =   -346125.1940  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    917670.8267
+                                                    Density    =         1.0029
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   232500   TIME(PS) =    3472.675  TEMP(K) =   299.94  PRESS =     0.0
+ Etot   =   -223181.3151  EKtot   =     55081.9180  EPtot      =   -278263.2331
+ BOND   =      1281.6247  ANGLE   =      3126.3837  DIHED      =     11114.3624
+ 1-4 NB =      1222.0624  1-4 EEL =     14978.5919  VDWAALS    =     36204.1759
+ EELEC  =   -346190.4341  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916882.3389
+                                                    Density    =         1.0037
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   235000   TIME(PS) =    3482.675  TEMP(K) =   298.96  PRESS =     0.0
+ Etot   =   -223254.3970  EKtot   =     54901.2422  EPtot      =   -278155.6392
+ BOND   =      1253.6537  ANGLE   =      3133.9044  DIHED      =     11080.8427
+ 1-4 NB =      1232.7134  1-4 EEL =     15033.5662  VDWAALS    =     36998.2826
+ EELEC  =   -346888.6022  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915234.1837
+                                                    Density    =         1.0055
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   237500   TIME(PS) =    3492.675  TEMP(K) =   299.44  PRESS =     0.0
+ Etot   =   -223330.5964  EKtot   =     54989.1250  EPtot      =   -278319.7214
+ BOND   =      1210.1722  ANGLE   =      3080.0032  DIHED      =     11084.2230
+ 1-4 NB =      1226.4871  1-4 EEL =     15040.2812  VDWAALS    =     36122.5724
+ EELEC  =   -346083.4605  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    913899.0306
+                                                    Density    =         1.0070
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   240000   TIME(PS) =    3502.675  TEMP(K) =   299.13  PRESS =     0.0
+ Etot   =   -223327.7640  EKtot   =     54932.6172  EPtot      =   -278260.3812
+ BOND   =      1253.2472  ANGLE   =      3173.2232  DIHED      =     11084.7176
+ 1-4 NB =      1234.4705  1-4 EEL =     15037.9168  VDWAALS    =     36528.7439
+ EELEC  =   -346572.7004  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    914681.7904
+                                                    Density    =         1.0061
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   242500   TIME(PS) =    3512.675  TEMP(K) =   299.18  PRESS =     0.0
+ Etot   =   -223433.5942  EKtot   =     54942.2969  EPtot      =   -278375.8911
+ BOND   =      1202.3268  ANGLE   =      3143.2211  DIHED      =     11085.5650
+ 1-4 NB =      1217.4007  1-4 EEL =     15084.0457  VDWAALS    =     36348.2348
+ EELEC  =   -346456.6852  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    913199.1593
+                                                    Density    =         1.0078
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   245000   TIME(PS) =    3522.675  TEMP(K) =   299.95  PRESS =     0.0
+ Etot   =   -223429.9630  EKtot   =     55082.4922  EPtot      =   -278512.4552
+ BOND   =      1222.3600  ANGLE   =      3076.3697  DIHED      =     11043.3900
+ 1-4 NB =      1212.0534  1-4 EEL =     15048.8338  VDWAALS    =     36672.3598
+ EELEC  =   -346787.8220  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    914821.0207
+                                                    Density    =         1.0060
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   247500   TIME(PS) =    3532.675  TEMP(K) =   299.99  PRESS =     0.0
+ Etot   =   -223411.4802  EKtot   =     55089.6367  EPtot      =   -278501.1170
+ BOND   =      1181.0606  ANGLE   =      3090.7997  DIHED      =     11046.3066
+ 1-4 NB =      1237.9887  1-4 EEL =     15016.6941  VDWAALS    =     36502.3441
+ EELEC  =   -346576.3108  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    914725.9827
+                                                    Density    =         1.0061
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   250000   TIME(PS) =    3542.675  TEMP(K) =   299.82  PRESS =     0.0
+ Etot   =   -223405.3149  EKtot   =     55058.9922  EPtot      =   -278464.3071
+ BOND   =      1209.3083  ANGLE   =      3081.6128  DIHED      =     11086.9427
+ 1-4 NB =      1229.0777  1-4 EEL =     15040.7898  VDWAALS    =     36249.1679
+ EELEC  =   -346361.2062  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915162.2683
+                                                    Density    =         1.0056
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   252500   TIME(PS) =    3552.675  TEMP(K) =   299.42  PRESS =     0.0
+ Etot   =   -223359.2667  EKtot   =     54986.1328  EPtot      =   -278345.3996
+ BOND   =      1233.2562  ANGLE   =      3084.9250  DIHED      =     11104.4408
+ 1-4 NB =      1224.3787  1-4 EEL =     15093.9361  VDWAALS    =     36352.9680
+ EELEC  =   -346439.3044  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915988.7428
+                                                    Density    =         1.0047
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   255000   TIME(PS) =    3562.675  TEMP(K) =   298.46  PRESS =     0.0
+ Etot   =   -223376.6730  EKtot   =     54808.7539  EPtot      =   -278185.4269
+ BOND   =      1183.9083  ANGLE   =      3135.1960  DIHED      =     11062.0575
+ 1-4 NB =      1230.2468  1-4 EEL =     15030.7388  VDWAALS    =     36500.9874
+ EELEC  =   -346328.5617  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    914619.6025
+                                                    Density    =         1.0062
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   257500   TIME(PS) =    3572.675  TEMP(K) =   299.39  PRESS =     0.0
+ Etot   =   -223398.3286  EKtot   =     54980.9570  EPtot      =   -278379.2857
+ BOND   =      1188.0401  ANGLE   =      3041.2647  DIHED      =     11085.0424
+ 1-4 NB =      1237.7888  1-4 EEL =     14996.3652  VDWAALS    =     36935.1312
+ EELEC  =   -346862.9181  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    914372.1780
+                                                    Density    =         1.0065
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   260000   TIME(PS) =    3582.675  TEMP(K) =   299.86  PRESS =     0.0
+ Etot   =   -223346.3831  EKtot   =     55065.8516  EPtot      =   -278412.2347
+ BOND   =      1252.9243  ANGLE   =      3089.6719  DIHED      =     11025.3227
+ 1-4 NB =      1231.2149  1-4 EEL =     14998.6912  VDWAALS    =     36214.8595
+ EELEC  =   -346224.9192  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916045.3336
+                                                    Density    =         1.0047
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   262500   TIME(PS) =    3592.675  TEMP(K) =   300.32  PRESS =     0.0
+ Etot   =   -223347.3663  EKtot   =     55150.3242  EPtot      =   -278497.6905
+ BOND   =      1204.2585  ANGLE   =      3144.6561  DIHED      =     11065.6071
+ 1-4 NB =      1227.7903  1-4 EEL =     15133.5875  VDWAALS    =     36238.1702
+ EELEC  =   -346511.7602  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    914651.1238
+                                                    Density    =         1.0062
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   265000   TIME(PS) =    3602.675  TEMP(K) =   300.20  PRESS =     0.0
+ Etot   =   -223316.5821  EKtot   =     55129.4219  EPtot      =   -278446.0040
+ BOND   =      1193.8225  ANGLE   =      3097.6562  DIHED      =     11113.2252
+ 1-4 NB =      1267.8129  1-4 EEL =     15199.5747  VDWAALS    =     36223.3040
+ EELEC  =   -346541.3996  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916339.0988
+                                                    Density    =         1.0043
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   267500   TIME(PS) =    3612.675  TEMP(K) =   300.98  PRESS =     0.0
+ Etot   =   -223337.8209  EKtot   =     55272.1914  EPtot      =   -278610.0123
+ BOND   =      1261.2078  ANGLE   =      3105.3608  DIHED      =     11053.8936
+ 1-4 NB =      1219.8048  1-4 EEL =     15078.4757  VDWAALS    =     36745.3192
+ EELEC  =   -347074.0742  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916053.7644
+                                                    Density    =         1.0046
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   270000   TIME(PS) =    3622.675  TEMP(K) =   299.79  PRESS =     0.0
+ Etot   =   -223360.1631  EKtot   =     55053.7734  EPtot      =   -278413.9366
+ BOND   =      1291.1827  ANGLE   =      3100.9593  DIHED      =     11040.0422
+ 1-4 NB =      1245.7950  1-4 EEL =     15024.2564  VDWAALS    =     36702.8000
+ EELEC  =   -346818.9723  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915726.4488
+                                                    Density    =         1.0050
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   272500   TIME(PS) =    3632.675  TEMP(K) =   300.75  PRESS =     0.0
+ Etot   =   -223394.6141  EKtot   =     55229.6641  EPtot      =   -278624.2782
+ BOND   =      1249.2763  ANGLE   =      3120.5399  DIHED      =     11041.2358
+ 1-4 NB =      1205.5952  1-4 EEL =     15044.9787  VDWAALS    =     36474.2679
+ EELEC  =   -346760.1721  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915561.0831
+                                                    Density    =         1.0052
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   275000   TIME(PS) =    3642.675  TEMP(K) =   299.30  PRESS =     0.0
+ Etot   =   -223471.9039  EKtot   =     54963.3633  EPtot      =   -278435.2672
+ BOND   =      1206.9601  ANGLE   =      3056.8678  DIHED      =     11066.9394
+ 1-4 NB =      1258.3892  1-4 EEL =     15121.8950  VDWAALS    =     36856.7899
+ EELEC  =   -347003.1086  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    912370.6120
+                                                    Density    =         1.0087
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   277500   TIME(PS) =    3652.675  TEMP(K) =   299.17  PRESS =     0.0
+ Etot   =   -223453.7096  EKtot   =     54940.4141  EPtot      =   -278394.1237
+ BOND   =      1213.0882  ANGLE   =      3134.4529  DIHED      =     11064.1435
+ 1-4 NB =      1212.1434  1-4 EEL =     15093.3808  VDWAALS    =     36522.8899
+ EELEC  =   -346634.2223  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    914579.1507
+                                                    Density    =         1.0063
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   280000   TIME(PS) =    3662.675  TEMP(K) =   298.28  PRESS =     0.0
+ Etot   =   -223379.9184  EKtot   =     54776.8750  EPtot      =   -278156.7934
+ BOND   =      1270.9105  ANGLE   =      3029.4647  DIHED      =     11105.9726
+ 1-4 NB =      1208.6545  1-4 EEL =     15027.2450  VDWAALS    =     35949.1683
+ EELEC  =   -345748.2090  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916093.1068
+                                                    Density    =         1.0046
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   282500   TIME(PS) =    3672.675  TEMP(K) =   301.39  PRESS =     0.0
+ Etot   =   -223374.9626  EKtot   =     55346.5977  EPtot      =   -278721.5602
+ BOND   =      1228.7795  ANGLE   =      3042.2662  DIHED      =     11055.1634
+ 1-4 NB =      1244.3753  1-4 EEL =     15093.2484  VDWAALS    =     36614.2834
+ EELEC  =   -346999.6764  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916251.7352
+                                                    Density    =         1.0044
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   285000   TIME(PS) =    3682.675  TEMP(K) =   301.09  PRESS =     0.0
+ Etot   =   -223348.5971  EKtot   =     55291.9688  EPtot      =   -278640.5659
+ BOND   =      1230.0344  ANGLE   =      3054.9912  DIHED      =     11042.2233
+ 1-4 NB =      1233.9312  1-4 EEL =     15061.1376  VDWAALS    =     36707.2176
+ EELEC  =   -346970.1011  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916398.1838
+                                                    Density    =         1.0043
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   287500   TIME(PS) =    3692.675  TEMP(K) =   298.86  PRESS =     0.0
+ Etot   =   -223340.4787  EKtot   =     54883.4258  EPtot      =   -278223.9045
+ BOND   =      1267.5704  ANGLE   =      3052.4224  DIHED      =     11072.9644
+ 1-4 NB =      1250.4819  1-4 EEL =     15155.3409  VDWAALS    =     35961.9630
+ EELEC  =   -345984.6475  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916672.0834
+                                                    Density    =         1.0040
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   290000   TIME(PS) =    3702.675  TEMP(K) =   302.11  PRESS =     0.0
+ Etot   =   -223367.1450  EKtot   =     55479.5078  EPtot      =   -278846.6528
+ BOND   =      1190.8936  ANGLE   =      3078.8383  DIHED      =     11059.7076
+ 1-4 NB =      1240.4900  1-4 EEL =     15110.2860  VDWAALS    =     36742.8519
+ EELEC  =   -347269.7202  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915556.0973
+                                                    Density    =         1.0052
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   292500   TIME(PS) =    3712.675  TEMP(K) =   299.86  PRESS =     0.0
+ Etot   =   -223359.1693  EKtot   =     55065.8047  EPtot      =   -278424.9740
+ BOND   =      1240.0834  ANGLE   =      3210.9979  DIHED      =     11115.9576
+ 1-4 NB =      1209.5539  1-4 EEL =     15126.3703  VDWAALS    =     36241.5868
+ EELEC  =   -346569.5240  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915825.6189
+                                                    Density    =         1.0049
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   295000   TIME(PS) =    3722.675  TEMP(K) =   300.52  PRESS =     0.0
+ Etot   =   -223301.2026  EKtot   =     55186.9648  EPtot      =   -278488.1674
+ BOND   =      1248.4834  ANGLE   =      3155.4528  DIHED      =     11098.1041
+ 1-4 NB =      1236.2810  1-4 EEL =     15024.0579  VDWAALS    =     36500.7575
+ EELEC  =   -346751.3042  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916600.8204
+                                                    Density    =         1.0040
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   297500   TIME(PS) =    3732.675  TEMP(K) =   297.86  PRESS =     0.0
+ Etot   =   -223350.9513  EKtot   =     54698.7812  EPtot      =   -278049.7325
+ BOND   =      1216.1155  ANGLE   =      3131.5535  DIHED      =     11116.8363
+ 1-4 NB =      1215.7870  1-4 EEL =     15129.6645  VDWAALS    =     36426.2349
+ EELEC  =   -346285.9243  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916030.7111
+                                                    Density    =         1.0047
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   300000   TIME(PS) =    3742.675  TEMP(K) =   300.59  PRESS =     0.0
+ Etot   =   -223375.1197  EKtot   =     55200.7812  EPtot      =   -278575.9009
+ BOND   =      1251.4030  ANGLE   =      3111.4045  DIHED      =     11049.2440
+ 1-4 NB =      1278.2951  1-4 EEL =     15118.3664  VDWAALS    =     36909.0830
+ EELEC  =   -347293.6970  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915714.4522
+                                                    Density    =         1.0050
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   302500   TIME(PS) =    3752.675  TEMP(K) =   300.35  PRESS =     0.0
+ Etot   =   -223347.0976  EKtot   =     55156.2578  EPtot      =   -278503.3554
+ BOND   =      1182.5883  ANGLE   =      3063.4660  DIHED      =     11093.9129
+ 1-4 NB =      1240.8694  1-4 EEL =     15084.1791  VDWAALS    =     36238.3945
+ EELEC  =   -346406.7656  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    917744.8493
+                                                    Density    =         1.0028
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   305000   TIME(PS) =    3762.675  TEMP(K) =   301.89  PRESS =     0.0
+ Etot   =   -223316.8634  EKtot   =     55439.6250  EPtot      =   -278756.4884
+ BOND   =      1249.6305  ANGLE   =      3100.4915  DIHED      =     11104.2124
+ 1-4 NB =      1232.8134  1-4 EEL =     15075.7841  VDWAALS    =     36278.9131
+ EELEC  =   -346798.3334  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916487.9086
+                                                    Density    =         1.0042
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   307500   TIME(PS) =    3772.675  TEMP(K) =   299.97  PRESS =     0.0
+ Etot   =   -223354.3816  EKtot   =     55086.7656  EPtot      =   -278441.1472
+ BOND   =      1205.7654  ANGLE   =      3136.8746  DIHED      =     11104.3958
+ 1-4 NB =      1244.1685  1-4 EEL =     15083.8389  VDWAALS    =     36108.4991
+ EELEC  =   -346324.6895  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    913891.3838
+                                                    Density    =         1.0070
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   310000   TIME(PS) =    3782.675  TEMP(K) =   301.36  PRESS =     0.0
+ Etot   =   -223387.3656  EKtot   =     55342.4297  EPtot      =   -278729.7953
+ BOND   =      1232.8579  ANGLE   =      3076.4103  DIHED      =     11101.6672
+ 1-4 NB =      1235.4516  1-4 EEL =     15128.7420  VDWAALS    =     36837.7615
+ EELEC  =   -347342.6857  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    914324.4197
+                                                    Density    =         1.0065
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   312500   TIME(PS) =    3792.675  TEMP(K) =   299.79  PRESS =     0.0
+ Etot   =   -223402.3806  EKtot   =     55052.9297  EPtot      =   -278455.3103
+ BOND   =      1182.2184  ANGLE   =      3078.4330  DIHED      =     11120.2167
+ 1-4 NB =      1254.5885  1-4 EEL =     15035.8087  VDWAALS    =     36169.6358
+ EELEC  =   -346296.2114  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    914009.8393
+                                                    Density    =         1.0069
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   315000   TIME(PS) =    3802.675  TEMP(K) =   300.27  PRESS =     0.0
+ Etot   =   -223419.7241  EKtot   =     55142.5664  EPtot      =   -278562.2905
+ BOND   =      1194.5512  ANGLE   =      3133.7022  DIHED      =     11083.0294
+ 1-4 NB =      1221.5539  1-4 EEL =     15009.7550  VDWAALS    =     36223.5792
+ EELEC  =   -346428.4614  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    914842.3976
+                                                    Density    =         1.0060
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   317500   TIME(PS) =    3812.675  TEMP(K) =   300.35  PRESS =     0.0
+ Etot   =   -223454.1717  EKtot   =     55155.7852  EPtot      =   -278609.9569
+ BOND   =      1229.2115  ANGLE   =      3058.0905  DIHED      =     11089.3630
+ 1-4 NB =      1226.3154  1-4 EEL =     15078.8971  VDWAALS    =     36473.4579
+ EELEC  =   -346765.2923  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915159.6178
+                                                    Density    =         1.0056
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   320000   TIME(PS) =    3822.675  TEMP(K) =   300.16  PRESS =     0.0
+ Etot   =   -223466.7204  EKtot   =     55121.3320  EPtot      =   -278588.0524
+ BOND   =      1214.5136  ANGLE   =      3131.8395  DIHED      =     11107.0863
+ 1-4 NB =      1205.3749  1-4 EEL =     15076.4483  VDWAALS    =     36337.6210
+ EELEC  =   -346660.9361  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    914302.4906
+                                                    Density    =         1.0066
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   322500   TIME(PS) =    3832.675  TEMP(K) =   300.35  PRESS =     0.0
+ Etot   =   -223410.4581  EKtot   =     55156.3750  EPtot      =   -278566.8331
+ BOND   =      1197.8738  ANGLE   =      3163.9416  DIHED      =     11102.3813
+ 1-4 NB =      1251.2176  1-4 EEL =     15138.4444  VDWAALS    =     37036.7293
+ EELEC  =   -347457.4212  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916224.0994
+                                                    Density    =         1.0045
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   325000   TIME(PS) =    3842.675  TEMP(K) =   301.24  PRESS =     0.0
+ Etot   =   -223396.2048  EKtot   =     55320.5938  EPtot      =   -278716.7986
+ BOND   =      1229.2393  ANGLE   =      3104.7244  DIHED      =     11043.1935
+ 1-4 NB =      1207.8225  1-4 EEL =     14977.6603  VDWAALS    =     36028.8366
+ EELEC  =   -346308.2753  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916546.7841
+                                                    Density    =         1.0041
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   327500   TIME(PS) =    3852.675  TEMP(K) =   299.58  PRESS =     0.0
+ Etot   =   -223371.7653  EKtot   =     55014.8359  EPtot      =   -278386.6012
+ BOND   =      1192.7217  ANGLE   =      3209.1694  DIHED      =     11098.9182
+ 1-4 NB =      1235.7942  1-4 EEL =     15085.1368  VDWAALS    =     36140.9714
+ EELEC  =   -346349.3130  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916076.7319
+                                                    Density    =         1.0046
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   330000   TIME(PS) =    3862.675  TEMP(K) =   299.73  PRESS =     0.0
+ Etot   =   -223361.4002  EKtot   =     55042.8438  EPtot      =   -278404.2440
+ BOND   =      1241.6636  ANGLE   =      3124.5231  DIHED      =     11100.4520
+ 1-4 NB =      1223.1001  1-4 EEL =     15119.7151  VDWAALS    =     36357.1022
+ EELEC  =   -346570.8002  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915863.9676
+                                                    Density    =         1.0049
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   332500   TIME(PS) =    3872.675  TEMP(K) =   299.09  PRESS =     0.0
+ Etot   =   -223404.9468  EKtot   =     54924.6211  EPtot      =   -278329.5679
+ BOND   =      1189.7361  ANGLE   =      3123.1026  DIHED      =     11084.4548
+ 1-4 NB =      1239.8334  1-4 EEL =     15061.9383  VDWAALS    =     36716.1830
+ EELEC  =   -346744.8161  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915277.3776
+                                                    Density    =         1.0055
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   335000   TIME(PS) =    3882.675  TEMP(K) =   298.93  PRESS =     0.0
+ Etot   =   -223374.2958  EKtot   =     54896.1250  EPtot      =   -278270.4208
+ BOND   =      1240.6121  ANGLE   =      3070.8408  DIHED      =     11069.0908
+ 1-4 NB =      1245.1966  1-4 EEL =     15103.3313  VDWAALS    =     36532.5276
+ EELEC  =   -346532.0201  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916926.0069
+                                                    Density    =         1.0037
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   337500   TIME(PS) =    3892.675  TEMP(K) =   299.89  PRESS =     0.0
+ Etot   =   -223380.0064  EKtot   =     55071.8672  EPtot      =   -278451.8736
+ BOND   =      1208.6307  ANGLE   =      3049.2330  DIHED      =     11075.3766
+ 1-4 NB =      1269.7781  1-4 EEL =     15055.2204  VDWAALS    =     36591.7113
+ EELEC  =   -346701.8237  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915703.8778
+                                                    Density    =         1.0050
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   340000   TIME(PS) =    3902.675  TEMP(K) =   299.44  PRESS =     0.0
+ Etot   =   -223385.7855  EKtot   =     54989.5664  EPtot      =   -278375.3519
+ BOND   =      1247.0482  ANGLE   =      3110.2852  DIHED      =     11096.7942
+ 1-4 NB =      1236.3964  1-4 EEL =     15070.3079  VDWAALS    =     36696.5209
+ EELEC  =   -346832.7046  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    914636.9029
+                                                    Density    =         1.0062
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   342500   TIME(PS) =    3912.675  TEMP(K) =   301.41  PRESS =     0.0
+ Etot   =   -223379.6702  EKtot   =     55351.7305  EPtot      =   -278731.4007
+ BOND   =      1252.9627  ANGLE   =      3047.2484  DIHED      =     11126.7450
+ 1-4 NB =      1253.6969  1-4 EEL =     15069.1588  VDWAALS    =     36499.2367
+ EELEC  =   -346980.4491  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915296.7475
+                                                    Density    =         1.0055
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   345000   TIME(PS) =    3922.675  TEMP(K) =   299.19  PRESS =     0.0
+ Etot   =   -223412.7675  EKtot   =     54943.8750  EPtot      =   -278356.6425
+ BOND   =      1281.3710  ANGLE   =      3125.0045  DIHED      =     11097.1696
+ 1-4 NB =      1217.9657  1-4 EEL =     15061.8839  VDWAALS    =     36844.2237
+ EELEC  =   -346984.2608  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    913565.7740
+                                                    Density    =         1.0074
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   347500   TIME(PS) =    3932.675  TEMP(K) =   300.52  PRESS =     0.0
+ Etot   =   -223412.5780  EKtot   =     55188.3438  EPtot      =   -278600.9217
+ BOND   =      1278.7712  ANGLE   =      3204.1571  DIHED      =     11055.1539
+ 1-4 NB =      1233.2654  1-4 EEL =     15034.0169  VDWAALS    =     36407.9364
+ EELEC  =   -346814.2226  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915655.4576
+                                                    Density    =         1.0051
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   350000   TIME(PS) =    3942.675  TEMP(K) =   300.43  PRESS =     0.0
+ Etot   =   -223437.7003  EKtot   =     55170.9102  EPtot      =   -278608.6105
+ BOND   =      1185.7905  ANGLE   =      3157.6603  DIHED      =     11066.1646
+ 1-4 NB =      1255.2095  1-4 EEL =     15081.9792  VDWAALS    =     37103.2289
+ EELEC  =   -347458.6434  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915410.5933
+                                                    Density    =         1.0053
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   352500   TIME(PS) =    3952.675  TEMP(K) =   300.30  PRESS =     0.0
+ Etot   =   -223442.7734  EKtot   =     55146.7422  EPtot      =   -278589.5156
+ BOND   =      1244.8206  ANGLE   =      3066.7230  DIHED      =     11042.0009
+ 1-4 NB =      1262.0452  1-4 EEL =     15092.5716  VDWAALS    =     36561.0629
+ EELEC  =   -346858.7399  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    914487.1920
+                                                    Density    =         1.0064
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   355000   TIME(PS) =    3962.675  TEMP(K) =   299.80  PRESS =     0.0
+ Etot   =   -223396.3230  EKtot   =     55055.3789  EPtot      =   -278451.7019
+ BOND   =      1137.4414  ANGLE   =      3083.6403  DIHED      =     11059.9889
+ 1-4 NB =      1263.2955  1-4 EEL =     15128.1172  VDWAALS    =     36470.2964
+ EELEC  =   -346594.4817  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    917994.2348
+                                                    Density    =         1.0025
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   357500   TIME(PS) =    3972.675  TEMP(K) =   299.66  PRESS =     0.0
+ Etot   =   -223325.2346  EKtot   =     55028.9102  EPtot      =   -278354.1447
+ BOND   =      1204.9109  ANGLE   =      3020.1409  DIHED      =     11125.4999
+ 1-4 NB =      1239.3993  1-4 EEL =     15116.5327  VDWAALS    =     36152.9994
+ EELEC  =   -346213.6278  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    917604.1745
+                                                    Density    =         1.0029
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   360000   TIME(PS) =    3982.675  TEMP(K) =   300.26  PRESS =     0.0
+ Etot   =   -223308.6033  EKtot   =     55140.4102  EPtot      =   -278449.0134
+ BOND   =      1219.0234  ANGLE   =      3087.3930  DIHED      =     11068.9039
+ 1-4 NB =      1216.5156  1-4 EEL =     15016.5262  VDWAALS    =     36634.5692
+ EELEC  =   -346691.9448  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    917180.5135
+                                                    Density    =         1.0034
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   362500   TIME(PS) =    3992.675  TEMP(K) =   300.92  PRESS =     0.0
+ Etot   =   -223335.6889  EKtot   =     55260.9805  EPtot      =   -278596.6694
+ BOND   =      1194.7636  ANGLE   =      3184.8371  DIHED      =     11122.7625
+ 1-4 NB =      1223.5953  1-4 EEL =     15073.5905  VDWAALS    =     36557.4671
+ EELEC  =   -346953.6856  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916619.0674
+                                                    Density    =         1.0040
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   365000   TIME(PS) =    4002.675  TEMP(K) =   301.71  PRESS =     0.0
+ Etot   =   -223351.2749  EKtot   =     55406.9219  EPtot      =   -278758.1968
+ BOND   =      1199.1323  ANGLE   =      3127.9882  DIHED      =     11043.1406
+ 1-4 NB =      1235.5006  1-4 EEL =     15085.1941  VDWAALS    =     36430.6015
+ EELEC  =   -346879.7540  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916404.2343
+                                                    Density    =         1.0043
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   367500   TIME(PS) =    4012.675  TEMP(K) =   299.05  PRESS =     0.0
+ Etot   =   -223295.5868  EKtot   =     54918.3477  EPtot      =   -278213.9344
+ BOND   =      1207.1843  ANGLE   =      3150.7427  DIHED      =     11107.1344
+ 1-4 NB =      1230.7889  1-4 EEL =     15039.1447  VDWAALS    =     36242.5991
+ EELEC  =   -346191.5286  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    917832.3813
+                                                    Density    =         1.0027
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   370000   TIME(PS) =    4022.675  TEMP(K) =   299.91  PRESS =     0.0
+ Etot   =   -223337.6615  EKtot   =     55074.9336  EPtot      =   -278412.5951
+ BOND   =      1167.0015  ANGLE   =      3135.0448  DIHED      =     11064.3132
+ 1-4 NB =      1228.8847  1-4 EEL =     15077.0971  VDWAALS    =     36836.5730
+ EELEC  =   -346921.5093  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916159.8422
+                                                    Density    =         1.0045
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   372500   TIME(PS) =    4032.675  TEMP(K) =   300.59  PRESS =     0.0
+ Etot   =   -223306.5369  EKtot   =     55200.4219  EPtot      =   -278506.9588
+ BOND   =      1242.3084  ANGLE   =      3145.2248  DIHED      =     11107.9302
+ 1-4 NB =      1235.8807  1-4 EEL =     15005.9833  VDWAALS    =     36687.1038
+ EELEC  =   -346931.3901  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    917448.3273
+                                                    Density    =         1.0031
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   375000   TIME(PS) =    4042.675  TEMP(K) =   300.17  PRESS =     0.0
+ Etot   =   -223334.1287  EKtot   =     55123.6680  EPtot      =   -278457.7967
+ BOND   =      1215.0598  ANGLE   =      3114.8930  DIHED      =     11076.6764
+ 1-4 NB =      1224.1468  1-4 EEL =     15000.8046  VDWAALS    =     36616.8045
+ EELEC  =   -346706.1818  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916890.4591
+                                                    Density    =         1.0037
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   377500   TIME(PS) =    4052.675  TEMP(K) =   300.57  PRESS =     0.0
+ Etot   =   -223316.4134  EKtot   =     55197.6172  EPtot      =   -278514.0306
+ BOND   =      1201.9411  ANGLE   =      3087.3189  DIHED      =     11046.2729
+ 1-4 NB =      1224.9751  1-4 EEL =     15136.6503  VDWAALS    =     36494.9127
+ EELEC  =   -346706.1015  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    917134.9731
+                                                    Density    =         1.0035
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   380000   TIME(PS) =    4062.675  TEMP(K) =   300.93  PRESS =     0.0
+ Etot   =   -223378.6730  EKtot   =     55263.2070  EPtot      =   -278641.8801
+ BOND   =      1266.0447  ANGLE   =      3164.8466  DIHED      =     11120.4512
+ 1-4 NB =      1217.6403  1-4 EEL =     15046.4097  VDWAALS    =     36341.5985
+ EELEC  =   -346798.8710  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    914375.9974
+                                                    Density    =         1.0065
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   382500   TIME(PS) =    4072.675  TEMP(K) =   301.87  PRESS =     0.0
+ Etot   =   -223431.5895  EKtot   =     55434.7461  EPtot      =   -278866.3356
+ BOND   =      1214.7347  ANGLE   =      3124.0484  DIHED      =     11119.6908
+ 1-4 NB =      1234.6612  1-4 EEL =     15108.6841  VDWAALS    =     36612.5518
+ EELEC  =   -347280.7067  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    913971.8069
+                                                    Density    =         1.0069
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   385000   TIME(PS) =    4082.675  TEMP(K) =   300.19  PRESS =     0.0
+ Etot   =   -223415.7442  EKtot   =     55126.9727  EPtot      =   -278542.7169
+ BOND   =      1168.4930  ANGLE   =      3159.1681  DIHED      =     11069.3610
+ 1-4 NB =      1243.4088  1-4 EEL =     15076.1065  VDWAALS    =     36502.1856
+ EELEC  =   -346761.4398  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915788.0460
+                                                    Density    =         1.0049
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   387500   TIME(PS) =    4092.675  TEMP(K) =   301.66  PRESS =     0.0
+ Etot   =   -223416.2107  EKtot   =     55396.2578  EPtot      =   -278812.4685
+ BOND   =      1246.6635  ANGLE   =      3158.8645  DIHED      =     11096.8329
+ 1-4 NB =      1244.5421  1-4 EEL =     15046.5646  VDWAALS    =     36369.0765
+ EELEC  =   -346975.0127  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915632.8069
+                                                    Density    =         1.0051
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   390000   TIME(PS) =    4102.675  TEMP(K) =   298.68  PRESS =     0.0
+ Etot   =   -223344.2475  EKtot   =     54849.3203  EPtot      =   -278193.5678
+ BOND   =      1220.8887  ANGLE   =      3137.4200  DIHED      =     11058.0414
+ 1-4 NB =      1202.6946  1-4 EEL =     15001.3768  VDWAALS    =     36150.7202
+ EELEC  =   -345964.7094  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    917008.7226
+                                                    Density    =         1.0036
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   392500   TIME(PS) =    4112.675  TEMP(K) =   299.74  PRESS =     0.0
+ Etot   =   -223338.0636  EKtot   =     55045.1758  EPtot      =   -278383.2394
+ BOND   =      1233.6238  ANGLE   =      3183.7047  DIHED      =     11058.2004
+ 1-4 NB =      1255.4845  1-4 EEL =     15040.2948  VDWAALS    =     36333.9290
+ EELEC  =   -346488.4764  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    917162.5914
+                                                    Density    =         1.0034
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   395000   TIME(PS) =    4122.675  TEMP(K) =   300.47  PRESS =     0.0
+ Etot   =   -223324.2029  EKtot   =     55178.2266  EPtot      =   -278502.4294
+ BOND   =      1241.8743  ANGLE   =      3086.1511  DIHED      =     11079.0925
+ 1-4 NB =      1221.2339  1-4 EEL =     15107.6385  VDWAALS    =     36987.6749
+ EELEC  =   -347226.0944  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    917382.2500
+                                                    Density    =         1.0032
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   397500   TIME(PS) =    4132.675  TEMP(K) =   298.68  PRESS =     0.0
+ Etot   =   -223389.9469  EKtot   =     54850.4922  EPtot      =   -278240.4391
+ BOND   =      1212.7122  ANGLE   =      3168.2601  DIHED      =     11089.6027
+ 1-4 NB =      1241.0770  1-4 EEL =     15085.0515  VDWAALS    =     36330.7339
+ EELEC  =   -346367.8764  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    914256.6676
+                                                    Density    =         1.0066
+ ------------------------------------------------------------------------------
+
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+check COM velocity, temp:        0.000000     0.00(Removed)
+
+ NSTEP =   400000   TIME(PS) =    4142.675  TEMP(K) =   299.41  PRESS =     0.0
+ Etot   =   -223386.4041  EKtot   =     54984.5430  EPtot      =   -278370.9471
+ BOND   =      1216.4988  ANGLE   =      3153.6566  DIHED      =     11046.2575
+ 1-4 NB =      1207.7893  1-4 EEL =     15070.1166  VDWAALS    =     36123.7709
+ EELEC  =   -346189.0368  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    915069.4352
+                                                    Density    =         1.0057
+ ------------------------------------------------------------------------------
+
+
+      A V E R A G E S   O V E R     160 S T E P S
+
+
+ NSTEP =   400000   TIME(PS) =    4142.675  TEMP(K) =   300.04  PRESS =     0.0
+ Etot   =   -223274.2111  EKtot   =     55099.5123  EPtot      =   -278373.7234
+ BOND   =      1222.9499  ANGLE   =      3109.1594  DIHED      =     11089.5707
+ 1-4 NB =      1237.7800  1-4 EEL =     15057.0110  VDWAALS    =     36444.7814
+ EELEC  =   -346534.9758  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =    916496.5869
+                                                    Density    =         1.0042
+ ------------------------------------------------------------------------------
+
+
+      R M S  F L U C T U A T I O N S
+
+
+ NSTEP =   400000   TIME(PS) =    4142.675  TEMP(K) =     0.82  PRESS =     0.0
+ Etot   =       245.6270  EKtot   =       149.7097  EPtot      =       283.4786
+ BOND   =        32.2154  ANGLE   =        47.9358  DIHED      =        33.8820
+ 1-4 NB =        16.0923  1-4 EEL =        50.2839  VDWAALS    =       269.8628
+ EELEC  =       437.8928  EHBOND  =         0.0000  RESTRAINT  =         0.0000
+ EKCMT  =         0.0000  VIRIAL  =         0.0000  VOLUME     =      2533.2707
+                                                    Density    =         0.0028
+ ------------------------------------------------------------------------------
+
+| MC Barostat:       4000 volume changes attempted.
+| MC Barostat:       1303 changes successful ( 32.57%)
+ ------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+   5.  TIMINGS
+--------------------------------------------------------------------------------
+
+|  NonSetup CPU Time in Major Routines:
+|
+|     Routine           Sec        %
+|     ------------------------------
+|     Nonbond          38.79   19.76
+|     Bond              0.00    0.00
+|     Angle             0.00    0.00
+|     Dihedral          0.00    0.00
+|     Shake             1.69    0.86
+|     RunMD           149.96   76.41
+|     Other             5.83    2.97
+|     ------------------------------
+|     Total           196.27
+
+|  PME Nonbond Pairlist CPU Time:
+|
+|     Routine              Sec        %
+|     ---------------------------------
+|     Set Up Cit           0.00    0.00
+|     Build List           0.00    0.00
+|     ---------------------------------
+|     Total                0.00    0.00
+
+|  PME Direct Force CPU Time:
+|
+|     Routine              Sec        %
+|     ---------------------------------
+|     NonBonded Calc       0.00    0.00
+|     Exclude Masked       0.00    0.00
+|     Other                0.67    0.34
+|     ---------------------------------
+|     Total                0.67    0.34
+
+|  PME Reciprocal Force CPU Time:
+|
+|     Routine              Sec        %
+|     ---------------------------------
+|     1D bspline           0.00    0.00
+|     Grid Charges         0.00    0.00
+|     Scalar Sum           0.00    0.00
+|     Gradient Sum         0.00    0.00
+|     FFT                  0.00    0.00
+|     ---------------------------------
+|     Total                0.00    0.00
+
+|  Final Performance Info:
+|     -----------------------------------------------------
+|     Average timings for last   32500 steps:
+|     Elapsed(s) =      15.92 Per Step(ms) =       0.49
+|         ns/day =     705.66   seconds/ns =     122.44
+|
+|     Average timings for all steps:
+|     Elapsed(s) =     201.80 Per Step(ms) =       0.50
+|         ns/day =     685.03   seconds/ns =     126.13
+|     -----------------------------------------------------
+
+|  Setup CPU time:            0.75 seconds
+|  NonSetup CPU time:       196.27 seconds
+|  Total CPU time:          197.02 seconds     0.05 hours
+
+|  Setup wall time:           1    seconds
+|  NonSetup wall time:      202    seconds
+|  Total wall time:         203    seconds     0.06 hours
