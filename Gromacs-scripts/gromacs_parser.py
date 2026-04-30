@@ -11,14 +11,10 @@ from scipy.optimize import curve_fit
 # CONFIGURATION
 # ==========================================
 ROOT = "."
-# Combined list of all your architecture directories
-ARCHS = [
-    "A100freq", "A40freq", "H100-freq", "H200-freq",
-    "A40powercap", "A100powercap", "H100-cap", "H200-cap"
-]
-UTIL_THRESHOLD = 85.0
+ARCHS = ["gromacs_H100_cap", "gromacs_H200_cap", "gromacs_H100_freq", "gromacs_H200_freq"]
+UTIL_THRESHOLD = 80.0
 OUTDIR = "plots_gpu"
-CSV_CACHE = "gpu_amber_combined_data.csv"
+CSV_CACHE = "gpu_gromacs_data.csv"
 
 ATOM_COUNTS = {
     "FactorIX_NVE": 90906, "FactorIX_NPT": 90906,
@@ -26,12 +22,13 @@ ATOM_COUNTS = {
     "Cellulose_NVE": 408609, "Cellulose_NPT": 408609,
     "STMV_NVE": 1067095, "STMV_NPT": 1067095,
     "nucleosome": 25095, "TRPCage": 304, "myoglobin": 2492,
+    "2md_start0": 20248, "FL_md1_berendsen": 170320, 
+    "rnanvt": 31889, "eag1": 615924, "PI_large_test": 80289, "stmv_pme_nvt": 1066628
 }
 
-# Regex for Frequency: Benchmark_1215,1050_powerlog.csv
-FREQ_RE = re.compile(r"^(?P<bench>.+)_(?P<mem>\d+),(?P<gfx>\d+)_powerlog\.csv$", re.IGNORECASE)
-# Regex for Powercap: Benchmark_350_powerlog.csv
-CAP_RE = re.compile(r"^(?P<bench>.+)_(?P<pc>\d+)_powerlog\.csv$", re.IGNORECASE)
+# --- UNIFIED REGEXES ---
+FREQ_RE = re.compile(r"^(?P<bench>.+?)_(?P<mem>\d+)-(?P<gfx>\d+)_.*powerlog\.csv$", re.IGNORECASE)
+CAP_RE = re.compile(r"^(?P<bench>.+?)_(?P<pc>\d+)_.*powerlog\.csv$", re.IGNORECASE)
 
 # ==========================================
 # HELPER FUNCTIONS
@@ -50,23 +47,18 @@ def avg_power_from_powerlog(path, util_thr=85.0):
             if u >= util_thr: vals.append(p)
     return (sum(vals) / len(vals)) if vals else None
 
-def find_mdout(run_dir, bench, arch):
-    pat = re.compile(rf"^{re.escape(bench)}_{re.escape(arch)}\..*\.mdout$", re.IGNORECASE)
-    for fn in os.listdir(run_dir):
-        if pat.match(fn): return os.path.join(run_dir, fn)
+def find_gromacs_log(run_dir, bench, search_suffix):
+    search_str = f"{bench}_{search_suffix}".lower()
     for fn in os.listdir(run_dir):
         low = fn.lower()
-        if low.endswith(".mdout") and bench.lower() in low and arch.lower() in low:
+        if (low.endswith(".out") or low.endswith(".log")) and search_str in low:
             return os.path.join(run_dir, fn)
     return None
 
-def parse_nsday_from_mdout(mdout_path, min_last_steps=76000):
-    with open(mdout_path, "r", errors="ignore") as f: txt = f.read()
-    last_blocks = re.findall(r"Average timings for last\s+(\d+)\s+steps:.*?ns/day\s*=\s*([0-9.]+)", txt, flags=re.DOTALL)
-    valid = [(int(n), float(ns)) for (n, ns) in last_blocks if int(n) >= min_last_steps]
-    if valid: return valid[-1][1]
-    all_blocks = re.findall(r"Average timings for all steps:.*?ns/day\s*=\s*([0-9.]+)", txt, flags=re.DOTALL)
-    if all_blocks: return float(all_blocks[-1])
+def parse_nsday_from_gromacs(log_path):
+    with open(log_path, "r", errors="ignore") as f: txt = f.read()
+    m = re.search(r"Performance:\s+([0-9.]+)", txt)
+    if m: return float(m.group(1))
     return None
 
 def iqr_filter(df, col, k=1.5):
@@ -81,13 +73,6 @@ def get_atom_count(bench_name):
     return None
 
 # ==========================================
-# POWER MODELING FUNCTION
-# ==========================================
-def dvfs_power_model(freq, a, b, c):
-    """Quadratic DVFS Power Model. Can be updated to exponential later if needed."""
-    return a * freq**2 + b * freq + c
-
-# ==========================================
 # PARSING & CACHING LOGIC
 # ==========================================
 def load_or_parse_data(clean_cache):
@@ -99,7 +84,7 @@ def load_or_parse_data(clean_cache):
         print(f"📦 Loading cached data from {CSV_CACHE} (Use --clean to re-parse logs)")
         return pd.read_csv(CSV_CACHE)
 
-    print("🔍 Parsing raw logs. This might take a moment...")
+    print("🔍 Parsing raw GROMACS logs. This might take a moment...")
     rows = []
     for arch in ARCHS:
         arch_dir = os.path.join(ROOT, arch)
@@ -107,18 +92,20 @@ def load_or_parse_data(clean_cache):
 
         for run_root, _, files in os.walk(arch_dir):
             for fn in files:
-                run_type, bench, mem_mhz, gfx_mhz, pc_w = None, None, pd.NA, pd.NA, pd.NA
+                run_type, bench, search_suffix = None, None, None
+                mem_mhz, gfx_mhz, pc_w = pd.NA, pd.NA, pd.NA
                 
-                # Dynamic detection: Frequency or Powercap?
                 m_freq = FREQ_RE.match(fn)
                 if m_freq:
                     run_type, bench = "frequency", m_freq.group("bench")
                     mem_mhz, gfx_mhz = int(m_freq.group("mem")), int(m_freq.group("gfx"))
+                    search_suffix = f"{mem_mhz}-{gfx_mhz}"
                 else:
                     m_cap = CAP_RE.match(fn)
                     if m_cap:
                         run_type, bench = "powercap", m_cap.group("bench")
                         pc_w = int(m_cap.group("pc"))
+                        search_suffix = f"{pc_w}"
                     else:
                         continue
 
@@ -126,26 +113,27 @@ def load_or_parse_data(clean_cache):
                 avg_p = avg_power_from_powerlog(powerlog, UTIL_THRESHOLD)
                 if avg_p is None: continue
 
-                mdout = find_mdout(run_root, bench, arch)
-                if mdout is None: continue
+                gmx_log = find_gromacs_log(run_root, bench, search_suffix)
+                if gmx_log is None: continue
 
-                ns_day = parse_nsday_from_mdout(mdout)
+                ns_day = parse_nsday_from_gromacs(gmx_log)
                 if ns_day is None: continue
 
                 rows.append(dict(
                     arch=arch, run_type=run_type, benchmark=bench,
                     mem_freq_mhz=mem_mhz, gfx_freq_mhz=gfx_mhz, powercap_w=pc_w,
-                    ns_day=ns_day, avg_power_w=avg_p, run_dir=run_root, mdout=mdout, powerlog=powerlog
+                    ns_day=ns_day, avg_power_w=avg_p, run_dir=run_root, 
+                    log_file=gmx_log, powerlog=powerlog
                 ))
 
     df = pd.DataFrame(rows)
-    if df.empty: raise SystemExit("No data parsed. Check mdout and powerlogs.")
-    
+    if df.empty: raise SystemExit("No data parsed. Check log files and directories.")
+
     df["atom_count"] = df["benchmark"].apply(get_atom_count)
     df = df.dropna(subset=["atom_count"]).copy()
     df["atom_count"] = df["atom_count"].astype(int)
 
-    # Core Metrics Calculations
+    # Calculate metrics before caching
     df["atom_ns_day"] = df["ns_day"] * df["atom_count"]
     df["efficiency"] = df["atom_ns_day"] / df["avg_power_w"]
     df["edp"] = df["avg_power_w"] / (df["atom_ns_day"] ** 2)
@@ -155,27 +143,31 @@ def load_or_parse_data(clean_cache):
     return df
 
 # ==========================================
-# MAIN SCRIPT
+# MAIN SCRIPT (CLI & MODULAR PLOTTING)
 # ==========================================
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Unified GPU Benchmark Plotter for Amber")
+    parser = argparse.ArgumentParser(description="Modular GPU Benchmark Plotter for GROMACS")
+    
     parser.add_argument("--clean", action="store_true", help="Force re-parsing of raw logs")
     parser.add_argument("--all", action="store_true", help="Generate ALL plots and reports")
     parser.add_argument("--tradeoff", action="store_true", help="Generate Trade-off Analysis CSV")
-    parser.add_argument("--z-normal", action="store_true", help="Standard Z-plots (Performance vs Power)")
-    parser.add_argument("--z-weighted", action="store_true", help="Size-weighted Z-plots")
-    parser.add_argument("--z-energy", action="store_true", help="Publication Energy Z-plots")
-    parser.add_argument("--limits-power", action="store_true", help="Avg Power vs Hardware Limits (Freq/Cap)")
-    parser.add_argument("--limits-perf", action="store_true", help="Performance vs Hardware Limits (Freq/Cap)")
+    parser.add_argument("--z-normal", action="store_true", help="Generate Normal Z-plots (Size-weighted Performance vs Power)")
+    parser.add_argument("--z-energy", action="store_true", help="Generate Publication Energy Z-plots")
+    parser.add_argument("--power-freq", action="store_true", help="Generate Avg Power vs Graphics Frequency plots (Frequency runs only)")
+    parser.add_argument("--power-cap", action="store_true", help="Generate Avg Power vs Power Cap plots (Powercap runs only)")
     parser.add_argument("--model-power", action="store_true", help="Generate Predictive Power Models (Levenberg-Marquardt) for Frequency runs")
 
     args = parser.parse_args()
 
-    if not any([args.all, args.tradeoff, args.z_normal, args.z_weighted, args.z_energy, args.limits_power, args.limits_perf, args.model_power]):
+    if not any([args.all, args.tradeoff, args.z_normal, args.z_energy, args.power_freq, args.power_cap, args.model_power]):
         print("⚠️ No output flags specified. Only parsing/caching data. Use --help to see available options.")
 
     os.makedirs(OUTDIR, exist_ok=True)
     df = load_or_parse_data(args.clean)
+
+    # Split datasets early for the specific plots
+    df_freq = df[df["run_type"] == "frequency"]
+    df_cap = df[df["run_type"] == "powercap"]
 
     # ----------------------------
     # 0) Trade-off Analysis
@@ -231,53 +223,38 @@ if __name__ == "__main__":
                 })
 
         tradeoff_df = pd.DataFrame(tradeoff_rows)
-        out_csv = os.path.join(OUTDIR, "efficiency_tradeoff_amber_combined.csv")
+        out_csv = os.path.join(OUTDIR, "efficiency_tradeoff_gromacs.csv")
         tradeoff_df.to_csv(out_csv, index=False)
         print(f" -> Saved to {out_csv}")
-    # ----------------------------
-    # 1) Standard Z-plot
-    # ----------------------------
-    if args.all or args.z_normal:
-        print("Generating Standard Z-plots...")
-        for arch, sub in df.groupby("arch"):
-            plt.figure(figsize=(9, 6))
-            for bench, ssub in sub.groupby("benchmark"):
-                sort_col = "gfx_freq_mhz" if ssub["run_type"].iloc[0] == "frequency" else "powercap_w"
-                ssub = ssub.sort_values(by=sort_col if sort_col in ssub.columns and not ssub[sort_col].isna().all() else "ns_day")
-                ssub = iqr_filter(ssub, "ns_day", k=1.0)
-                if ssub.empty: continue
-                plt.scatter(ssub["ns_day"], ssub["avg_power_w"], s=12, label=bench)
-                plt.plot(ssub["ns_day"], ssub["avg_power_w"], linewidth=0.8)
-            plt.xlabel("Performance (ns/day)")
-            plt.ylabel(f"GPU Avg Power (W) (util ≥ {UTIL_THRESHOLD:.0f}%)")
-            plt.title(f"GPU Z-plot: Power vs Performance — {arch}")
-            plt.legend(fontsize=8, ncol=2)
-            plt.savefig(os.path.join(OUTDIR, f"{arch}_gpu_zplot_normal.png"), dpi=300, bbox_inches="tight")
-            plt.close()
 
     # ----------------------------
-    # 2) Size-weighted Z-plot
+    # 1) Normal Z-plot (Performance vs Power)
     # ----------------------------
-    if args.all or args.z_weighted:
-        print("Generating Size-weighted Z-plots...")
+    if args.all or args.z_normal:
+        print("Generating Normal Z-plots...")
         for arch, sub in df.groupby("arch"):
             plt.figure(figsize=(9, 6))
             for bench, ssub in sub.groupby("benchmark"):
-                sort_col = "gfx_freq_mhz" if ssub["run_type"].iloc[0] == "frequency" else "powercap_w"
-                ssub = ssub.sort_values(by=sort_col if sort_col in ssub.columns and not ssub[sort_col].isna().all() else "atom_ns_day")
+                if ssub["run_type"].iloc[0] == "frequency":
+                    ssub = ssub.sort_values(by="gfx_freq_mhz")
+                else:
+                    ssub = ssub.sort_values(by="powercap_w")
+
                 ssub = iqr_filter(ssub, "atom_ns_day", k=1.0)
                 if ssub.empty: continue
+
                 plt.scatter(ssub["atom_ns_day"], ssub["avg_power_w"], s=12, label=bench)
                 plt.plot(ssub["atom_ns_day"], ssub["avg_power_w"], linewidth=0.8)
+
             plt.xlabel("Size-weighted performance (atom-ns/day)")
             plt.ylabel(f"GPU Avg Power (W) (util ≥ {UTIL_THRESHOLD:.0f}%)")
             plt.title(f"GPU Z-plot: Power vs Size-weighted Performance — {arch}")
             plt.legend(fontsize=8, ncol=2)
-            plt.savefig(os.path.join(OUTDIR, f"{arch}_gpu_zplot_weighted.png"), dpi=300, bbox_inches="tight")
+            plt.savefig(os.path.join(OUTDIR, f"{arch}_gpu_zplot_atom_weighted.png"), dpi=300, bbox_inches="tight")
             plt.close()
 
     # ----------------------------
-    # 3) Energy Z-plot (Publication)
+    # 2) Publication Energy Z-plot
     # ----------------------------
     if args.all or args.z_energy:
         print("Generating Publication Energy Z-plots...")
@@ -285,8 +262,11 @@ if __name__ == "__main__":
             plt.figure(figsize=(9, 6))
             for bench, ssub in sub.groupby("benchmark"):
                 is_freq = ssub["run_type"].iloc[0] == "frequency"
-                sort_col = "gfx_freq_mhz" if is_freq else "powercap_w"
-                ssub = ssub.sort_values(by=sort_col if sort_col in ssub.columns and not ssub[sort_col].isna().all() else "atom_ns_day")
+                if is_freq:
+                    ssub = ssub.sort_values(by="gfx_freq_mhz")
+                else:
+                    ssub = ssub.sort_values(by="powercap_w")
+
                 ssub = iqr_filter(ssub, "atom_ns_day", k=1.0)
                 if ssub.empty: continue
 
@@ -295,31 +275,35 @@ if __name__ == "__main__":
 
                 max_eff_idx, sweet_spot_idx = ssub["efficiency"].idxmax(), ssub["edp"].idxmin()
                 eff_row, sweet_row = ssub.loc[max_eff_idx], ssub.loc[sweet_spot_idx]
-                
+
                 eff_perf, eff_eff = eff_row["atom_ns_day"], eff_row["efficiency"]
                 eff_val = int(eff_row['gfx_freq_mhz']) if is_freq else int(eff_row['powercap_w'])
-                eff_label = f"{eff_val} {'MHz' if is_freq else 'W'}"
+                eff_label_text = f"{eff_val} {'MHz' if is_freq else 'W'}"
 
                 opt_perf, opt_eff = sweet_row["atom_ns_day"], sweet_row["efficiency"]
                 opt_val = int(sweet_row['gfx_freq_mhz']) if is_freq else int(sweet_row['powercap_w'])
-                edp_label = f"{opt_val} {'MHz' if is_freq else 'W'}"
+                edp_label_text = f"{opt_val} {'MHz' if is_freq else 'W'}"
 
                 if max_eff_idx == sweet_spot_idx:
                     plt.scatter(eff_perf, eff_eff, color='black', s=45, marker="D", zorder=5)
-                    plt.annotate(eff_label, (eff_perf, eff_eff), textcoords="offset points", xytext=(0, 12), ha='center', fontsize=8, rotation=0, color=line_color)
-                    plt.annotate(edp_label, (opt_perf, opt_eff), textcoords="offset points", xytext=(10, 10), ha='left', fontsize=8, rotation=-45, color=line_color)
+                    plt.annotate(eff_label_text, (eff_perf, eff_eff), textcoords="offset points", 
+                                 xytext=(0, 12), ha='center', fontsize=8, rotation=0, color=line_color)
+                    #plt.annotate(edp_label_text, (opt_perf, opt_eff), textcoords="offset points", 
+                                 #xytext=(10, 10), ha='left', fontsize=8, rotation=-45, color=line_color)
                 else:
                     plt.scatter(eff_perf, eff_eff, color='black', s=40, marker="s", zorder=5)
-                    plt.annotate(eff_label, (eff_perf, eff_eff), textcoords="offset points", xytext=(0, 8), ha='center', fontsize=8, rotation=0, color=line_color)
-                    
+                    plt.annotate(eff_label_text, (eff_perf, eff_eff), textcoords="offset points", 
+                                 xytext=(0, 8), ha='center', fontsize=8, rotation=0, color=line_color)
+
                     plt.scatter(opt_perf, opt_eff, color='black', s=40, marker="o", zorder=5)
-                    plt.annotate(edp_label, (opt_perf, opt_eff), textcoords="offset points", xytext=(-8, -8), ha='left', fontsize=8, rotation=-45, color=line_color)
+                    plt.annotate(edp_label_text, (opt_perf, opt_eff), textcoords="offset points", 
+                                 xytext=(-8, -8), ha='left', fontsize=8, rotation=-45, color=line_color)
 
             plt.xlabel("Size-weighted performance (atom-ns/day)")
             plt.ylabel(f"Efficiency (atom-ns/day/W)")
             #plt.title(f"Energy Z-plot — {arch}")
             
-            # Custom Legend Handling
+            # Custom Mixed Legend
             handles, labels = plt.gca().get_legend_handles_labels()
             marker_max = Line2D([0], [0], marker='s', color='w', markerfacecolor='black', markersize=7, label='Max $\\eta$')
             marker_edp = Line2D([0], [0], marker='o', color='w', markerfacecolor='black', markersize=7, label='Min EDP')
@@ -332,73 +316,59 @@ if __name__ == "__main__":
             plt.close()
 
     # ----------------------------
-    # 4) Power vs Hardware Constraint (Freq/Cap)
+    # 3) Power vs Frequency (df_freq only)
     # ----------------------------
-    if args.all or args.limits_power:
-        print("Generating Avg Power vs Hardware Limits plots...")
-        for arch, sub_arch in df.groupby("arch"):
-            is_freq = sub_arch["run_type"].iloc[0] == "frequency"
-            x_col = "gfx_freq_mhz" if is_freq else "powercap_w"
-            x_label = "Graphics frequency (MHz)" if is_freq else "Power cap (W)"
-            
-            if x_col not in sub_arch.columns: continue
-
-            plt.figure(figsize=(9, 6))
-            for bench, ssub in sub_arch.groupby("benchmark"):
-                if is_freq:
+    if args.all or args.power_freq:
+        print("Generating Power vs Frequency plots...")
+        if not df_freq.empty:
+            for arch, sub_arch in df_freq.groupby("arch"):
+                plt.figure(figsize=(9, 6))
+                for bench, ssub in sub_arch.groupby("benchmark"):
                     mem_choice = int(ssub["mem_freq_mhz"].mode().iloc[0])
-                    s = ssub[ssub["mem_freq_mhz"] == mem_choice].sort_values(by=x_col)
-                else:
-                    s = ssub.sort_values(by=x_col)
-                    
-                if s.empty: continue
-                plt.plot(s[x_col], s["avg_power_w"], marker="o", linestyle="-", linewidth=1, markersize=3, label=bench)
+                    s = ssub[ssub["mem_freq_mhz"] == mem_choice].sort_values(by="gfx_freq_mhz")
+                    if s.empty: continue
+                    plt.plot(s["gfx_freq_mhz"], s["avg_power_w"], marker="o", linestyle="-", linewidth=1, markersize=3, label=bench)
                 
-            plt.xlabel(x_label)
-            plt.ylabel("Average GPU Power (W)")
-            plt.title(f"Avg GPU Power vs {'Graphics frequency' if is_freq else 'Power cap'} — {arch}")
-            plt.legend(fontsize=8, ncol=2)
-            plt.grid(True)
-            plt.ylim(ymin=0)
-            plt.savefig(os.path.join(OUTDIR, f"{arch}_avgpower_vs_limits.png"), dpi=300, bbox_inches="tight")
-            plt.close()
+                plt.xlabel("Graphics frequency (MHz)")
+                plt.ylabel("Average GPU Power (W)")
+                plt.title(f"Avg GPU Power vs Graphics frequency — {arch}")
+                plt.legend(fontsize=8, ncol=2)
+                plt.grid(True)
+                plt.ylim(ymin=0)
+                plt.savefig(os.path.join(OUTDIR, f"{arch}_avgpower_vs_gfxfreq.png"), dpi=300, bbox_inches="tight")
+                plt.close()
+        else:
+            print(" -> Skipping: No frequency data found.")
 
     # ----------------------------
-    # 5) Perf vs Hardware Constraint (Freq/Cap)
+    # 4) Power vs Powercap (df_cap only)
     # ----------------------------
-    if args.all or args.limits_perf:
-        print("Generating Performance vs Hardware Limits plots...")
-        for arch, sub_arch in df.groupby("arch"):
-            is_freq = sub_arch["run_type"].iloc[0] == "frequency"
-            x_col = "gfx_freq_mhz" if is_freq else "powercap_w"
-            x_label = "Graphics frequency (MHz)" if is_freq else "Power cap (W)"
-            
-            if x_col not in sub_arch.columns: continue
+    if args.all or args.power_cap:
+        print("Generating Power vs Power Cap plots...")
+        if not df_cap.empty:
+            for arch, sub_arch in df_cap.groupby("arch"):
+                plt.figure(figsize=(9, 6))
+                for bench, ssub in sub_arch.groupby("benchmark"):
+                    s = ssub.sort_values(by="powercap_w")
+                    if s.empty: continue
+                    plt.plot(s["powercap_w"], s["avg_power_w"], marker="o", linestyle="-", linewidth=1, markersize=3, label=bench)
 
-            plt.figure(figsize=(9, 6))
-            for bench, ssub in sub_arch.groupby("benchmark"):
-                if is_freq:
-                    mem_choice = int(ssub["mem_freq_mhz"].mode().iloc[0])
-                    s = ssub[ssub["mem_freq_mhz"] == mem_choice].sort_values(by=x_col)
-                else:
-                    s = ssub.sort_values(by=x_col)
-                    
-                if s.empty: continue
-                plt.plot(s[x_col], s["atom_ns_day"], marker="o", linestyle="-", linewidth=1, markersize=3, label=bench)
-                
-            plt.xlabel(x_label)
-            plt.ylabel("Size-weighted performance (atom-ns/day)")
-            plt.title(f"Size-weighted Performance vs {'Graphics frequency' if is_freq else 'Power cap'} — {arch}")
-            plt.legend(fontsize=8, ncol=2)
-            plt.grid(True)
-            plt.savefig(os.path.join(OUTDIR, f"{arch}_atomnsday_vs_limits.png"), dpi=300, bbox_inches="tight")
-            plt.close()
+                plt.xlabel("Power cap (W)")
+                plt.ylabel("Average GPU Power (W)")
+                plt.title(f"Avg GPU Power vs Power cap — {arch}")
+                plt.legend(fontsize=8, ncol=2)
+                plt.grid(True)
+                plt.savefig(os.path.join(OUTDIR, f"{arch}_avgpower_vs_powercap.png"), dpi=300, bbox_inches="tight")
+                plt.close()
+        else:
+            print(" -> Skipping: No powercap data found.")
+
 
     # ----------------------------
-    # 6) Piecewise Power Modeling (Linear -> Capped Exponential)
+    # 6) Piecewise Power Modeling (Linear -> Quadratic)
     # ----------------------------
     if args.all or args.model_power:
-        print("Generating Piecewise Power Models (Linear -> Capped Exponential)...")
+        print("Generating Piecewise Power Models (Linear -> Quadratic)...")
         
         df_freq = df[df["run_type"] == "frequency"]
         
