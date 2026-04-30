@@ -429,57 +429,61 @@ if __name__ == "__main__":
                     def lin_model(x, m, c):
                         return m * x + c
                         
-                    def exp_capped_model(x, a, b, k):
-                        # Calculate the raw exponential growth
-                        raw_exp = a * np.exp(b * (x / 1000.0)) + k
+                    def poly_capped_model(x, a, b, c):
+                        # Calculate the raw quadratic polynomial growth
+                        raw_poly = a * (x**2) + b * x + c
                         # Cap the output at the hardware's maximum power limit
-                        return np.minimum(raw_exp, pwr_limit)
+                        return raw_poly
 
                     best_sse = float('inf')
                     best_split_idx = -1
-                    best_lin_popt, best_exp_popt = None, None
+                    best_lin_popt, best_poly_popt = None, None
                     
                     # Brute force search for the best inflection point
                     for i in range(3, len(x_data) - 2):
                         x_lin, y_lin = x_data[:i], y_data[:i]
-                        x_exp, y_exp = x_data[i-1:], y_data[i-1:] 
+                        x_poly, y_poly = x_data[i-1:], y_data[i-1:] 
                         
                         try:
                             lin_popt, _ = curve_fit(lin_model, x_lin, y_lin)
                             sse_lin = np.sum((y_lin - lin_model(x_lin, *lin_popt))**2)
                             
-                            exp_popt, _ = curve_fit(exp_capped_model, x_exp, y_exp, p0=[10, 1.0, min(y_exp)], maxfev=5000)
-                            sse_exp = np.sum((y_exp - exp_capped_model(x_exp, *exp_popt))**2)
+                            # Polynomial initial guesses: a (tiny), b (small), c (baseline power)
+                            poly_popt, _ = curve_fit(poly_capped_model, x_poly, y_poly, p0=[1e-5, 1e-2, min(y_poly)], maxfev=5000)
+                            sse_poly = np.sum((y_poly - poly_capped_model(x_poly, *poly_popt))**2)
                             
-                            if sse_lin + sse_exp < best_sse:
-                                best_sse = sse_lin + sse_exp
+                            if sse_lin + sse_poly < best_sse:
+                                best_sse = sse_lin + sse_poly
                                 best_split_idx = i
                                 best_lin_popt = lin_popt
-                                best_exp_popt = exp_popt
+                                best_poly_popt = poly_popt
                         except RuntimeError:
-                            continue 
+                            continue
 
                     if best_split_idx != -1:
                         split_freq = x_data[best_split_idx - 1]
-                        m, c = best_lin_popt
-                        a, b, k = best_exp_popt
+                        
+                        # Extract the optimized mathematical parameters
+                        m, intercept = best_lin_popt
+                        a, b, c = best_poly_popt
                         
                         x_smooth_lin = np.linspace(x_data.min(), split_freq, 50)
-                        # Extrapolate slightly past the max frequency (1.05x) to clearly visualize the flatline saturation
-                        x_smooth_exp = np.linspace(split_freq, x_data.max() * 1.01, 100)
+                        x_smooth_poly = np.linspace(split_freq, x_data.max(), 100)
                         
-                        plt.plot(x_smooth_lin, lin_model(x_smooth_lin, *best_lin_popt), linestyle="-", color=color, linewidth=2)
-                        plt.plot(x_smooth_exp, exp_capped_model(x_smooth_exp, *best_exp_popt), linestyle="--", color=color, linewidth=2)
+                        # Plot the solid linear line and dashed polynomial line
+                        plt.plot(x_smooth_lin, lin_model(x_smooth_lin, *best_lin_popt), linestyle="--", color=color, linewidth=2)
+                        plt.plot(x_smooth_poly, poly_capped_model(x_smooth_poly, *best_poly_popt), linestyle="--", color=color, linewidth=2)
                         
                         # Calculate Deviation (RMSE)
                         rmse = np.sqrt(best_sse / len(x_data))
                         
                         # Format the equations to clearly show the min() limit
-                        lin_eq = f"Lin (f \u2264 {split_freq}): P = {m:.3f}f {c:+.1f}"
-                        exp_eq = f"Exp (f > {split_freq}): P = min({a:.2f}e^({(b/1000.0):.4f}f) {k:+.1f}, {pwr_limit:.1f})"
+                        # We use scientific notation (.2e) for a and b because they are usually very small decimals
+                        lin_eq = f"Lin (f \u2264 {split_freq}): P = {m:.3f}f {intercept:+.1f}"
+                        poly_eq = f"Poly (f > {split_freq}): P = min({a:.2e}f\u00b2 {b:+.2e}f {c:+.1f}, {pwr_limit:.1f})"
                         err_text = f"Deviation: \u00B1{rmse:.2f} W"
                         
-                        label_text = f"{bench}\n  {lin_eq}\n  {exp_eq}\n  {err_text}"
+                        label_text = f"{bench}\n  {lin_eq}\n  {poly_eq}\n  {err_text}"
                         custom_handles.append(Line2D([0], [0], color=color, linestyle="-", marker="o", label=label_text))
                     else:
                         print(f" -> Warning: Piecewise fit failed to converge for {bench}")
