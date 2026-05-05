@@ -105,10 +105,10 @@ def create_plots():
             plt.figure(figsize=(9, 6))
             keys = sorted(arch_dict)
             values = [arch_dict[k] for k in keys]
-            plt.plot(keys, values, marker="o", linestyle="-", linewidth=1, markersize=3, label="ABC")
+            plt.plot(keys, values, marker="o", linestyle="-", linewidth=1, markersize=3, label="")
             plt.xlabel(result["xlabel"])
-            plt.ylabel("Average GPU Power (W)")
-            plt.title("Avg GPU Power vs {} — {}".format(result["vs"], arch_name))
+            plt.ylabel("Average GPU power draw (W)")
+            plt.title("Avg GPU power draw vs {} — {}".format(result["vs"], arch_name))
             plt.legend(fontsize=8, ncol=2)
             plt.grid(True)
             plt.ylim(ymin=0)
