@@ -1,0 +1,413 @@
+### This is /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-scripts/benchX-powercap.sh
+#!/bin/bash
+
+set -eu
+
+if [ $# -ne 5 ]; then
+    echo "Usage: ${0} [result-dir] [freq-start] [freq-end] [freq-reset] [freq-step]"
+    exit 1
+fi
+
+# The reason POWERCAP_RESET differs from POWERCAP_END is because of H100 & H200.
+# On our cluster they don't run on the default power limit of 700W, but 500W instead.
+# So allow the caller to reset the powerlimit to a custom one after benching.
+POWERCAP_START="${2}"
+POWERCAP_END="${3}"
+POWERCAP_RESET="${4}"
+POWERCAP_STEP="${5}"
+
+function reset_powercap() {
+    echo "Resetting clocks..."
+    sudo nvidia-smi --power-limit="${POWERCAP_RESET}"
+    echo "Done!"
+}
+
+trap 'reset_powercap' 15
+
+RESULT_DIR="$(readlink -f "${1}")"
+rm -fr "${RESULT_DIR}"
+mkdir -p "${RESULT_DIR}"
+
+LOG_FILE="${RESULT_DIR}/firestarter-bench-`date +%Y%m%d`-`hostname -s`.$$.log"
+echo "Saving bench log also to log file ..."
+echo "Please be patient ..."
+exec > >( tee "${LOG_FILE}" ) 2>&1
+
+# save script for reference :)
+echo "### This is ${0}"
+cat "${0}"
+
+echo "Start: `date`  / `date +%s`"
+
+echo "########################################"
+
+BINARY=/home/hpc/unrz/unrz104h/Projects/FIRESTARTER/sources/build/src/FIRESTARTER_CUDA
+
+#cat /proc/cpuinfo
+
+module load cuda/12.9.0
+
+export CUDA_VISIBLE_DEVICES=0
+nvidia-smi -i ${CUDA_VISIBLE_DEVICES}
+
+for ((POWERCAP=POWERCAP_START; POWERCAP<=POWERCAP_END; POWERCAP+=POWERCAP_STEP)); do
+    if (( POWERCAP > POWERCAP_END )); then
+        POWERCAP=${POWERCAP_END}
+    fi
+
+    echo "SETTING GPU POWERCAP TO GRAPHICS=${POWERCAP}"
+    sudo /usr/bin/nvidia-smi --power-limit="${POWERCAP}"
+
+    SUB_RESULT_DIR="${RESULT_DIR}/${POWERCAP}"
+    mkdir -p "${SUB_RESULT_DIR}"
+
+    NVLOG_FILE="${SUB_RESULT_DIR}/${POWERCAP}_powerlog.csv"
+    FSLOG_FILE="${SUB_RESULT_DIR}/${POWERCAP}_pid-$$.fsout"
+
+    echo "Nvidia Log: ${NVLOG_FILE}"
+    echo "FIRESTARTER Log: ${FSLOG_FILE}"
+
+    nvidia-smi -i "${CUDA_VISIBLE_DEVICES}" --loop-ms=100 --query-gpu=timestamp,power.draw,utilization.gpu --format=csv > "${NVLOG_FILE}" & POWER_PID=$!
+    "${BINARY}" -n 1 -l 1 -t 60 --period 1000000 > "${FSLOG_FILE}"
+    kill "${POWER_PID}"
+
+    echo "End: `date`  / `date +%s`"
+done
+
+reset_powercap
+Start: Mon May  4 16:26:33 CEST 2026  / 1777904793
+########################################
+Mon May  4 16:26:33 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 595.71.05              Driver Version: 595.71.05      CUDA Version: 13.2     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA A100-SXM4-40GB          On  |   00000000:CC:00.0 Off |                    0 |
+| N/A   34C    P0             64W /  400W |       0MiB /  40960MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+SETTING GPU POWERCAP TO GRAPHICS=100
+Power limit for GPU 00000000:CC:00.0 was set to 100.00 W from 400.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/100/100_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/100/100_pid-2323403.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May  4 16:27:46 CEST 2026  / 1777904866
+SETTING GPU POWERCAP TO GRAPHICS=110
+Power limit for GPU 00000000:CC:00.0 was set to 110.00 W from 100.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/110/110_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/110/110_pid-2323403.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May  4 16:29:15 CEST 2026  / 1777904955
+SETTING GPU POWERCAP TO GRAPHICS=120
+Power limit for GPU 00000000:CC:00.0 was set to 120.00 W from 110.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/120/120_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/120/120_pid-2323403.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May  4 16:30:28 CEST 2026  / 1777905028
+SETTING GPU POWERCAP TO GRAPHICS=130
+Power limit for GPU 00000000:CC:00.0 was set to 130.00 W from 120.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/130/130_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/130/130_pid-2323403.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May  4 16:31:32 CEST 2026  / 1777905092
+SETTING GPU POWERCAP TO GRAPHICS=140
+Power limit for GPU 00000000:CC:00.0 was set to 140.00 W from 130.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/140/140_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/140/140_pid-2323403.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May  4 16:32:46 CEST 2026  / 1777905166
+SETTING GPU POWERCAP TO GRAPHICS=150
+Power limit for GPU 00000000:CC:00.0 was set to 150.00 W from 140.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/150/150_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/150/150_pid-2323403.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May  4 16:33:53 CEST 2026  / 1777905233
+SETTING GPU POWERCAP TO GRAPHICS=160
+Power limit for GPU 00000000:CC:00.0 was set to 160.00 W from 150.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/160/160_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/160/160_pid-2323403.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May  4 16:35:08 CEST 2026  / 1777905308
+SETTING GPU POWERCAP TO GRAPHICS=170
+Power limit for GPU 00000000:CC:00.0 was set to 170.00 W from 160.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/170/170_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/170/170_pid-2323403.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May  4 16:36:18 CEST 2026  / 1777905378
+SETTING GPU POWERCAP TO GRAPHICS=180
+Power limit for GPU 00000000:CC:00.0 was set to 180.00 W from 170.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/180/180_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/180/180_pid-2323403.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May  4 16:37:22 CEST 2026  / 1777905442
+SETTING GPU POWERCAP TO GRAPHICS=190
+Power limit for GPU 00000000:CC:00.0 was set to 190.00 W from 180.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/190/190_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/190/190_pid-2323403.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May  4 16:38:34 CEST 2026  / 1777905514
+SETTING GPU POWERCAP TO GRAPHICS=200
+Power limit for GPU 00000000:CC:00.0 was set to 200.00 W from 190.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/200/200_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/200/200_pid-2323403.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May  4 16:39:44 CEST 2026  / 1777905584
+SETTING GPU POWERCAP TO GRAPHICS=210
+Power limit for GPU 00000000:CC:00.0 was set to 210.00 W from 200.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/210/210_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/210/210_pid-2323403.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May  4 16:40:54 CEST 2026  / 1777905654
+SETTING GPU POWERCAP TO GRAPHICS=220
+Power limit for GPU 00000000:CC:00.0 was set to 220.00 W from 210.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/220/220_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/220/220_pid-2323403.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May  4 16:42:02 CEST 2026  / 1777905722
+SETTING GPU POWERCAP TO GRAPHICS=230
+Power limit for GPU 00000000:CC:00.0 was set to 230.00 W from 220.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/230/230_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/230/230_pid-2323403.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May  4 16:43:07 CEST 2026  / 1777905787
+SETTING GPU POWERCAP TO GRAPHICS=240
+Power limit for GPU 00000000:CC:00.0 was set to 240.00 W from 230.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/240/240_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/240/240_pid-2323403.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May  4 16:44:11 CEST 2026  / 1777905851
+SETTING GPU POWERCAP TO GRAPHICS=250
+Power limit for GPU 00000000:CC:00.0 was set to 250.00 W from 240.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/250/250_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/250/250_pid-2323403.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May  4 16:45:23 CEST 2026  / 1777905923
+SETTING GPU POWERCAP TO GRAPHICS=260
+Power limit for GPU 00000000:CC:00.0 was set to 260.00 W from 250.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/260/260_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/260/260_pid-2323403.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May  4 16:46:34 CEST 2026  / 1777905994
+SETTING GPU POWERCAP TO GRAPHICS=270
+Power limit for GPU 00000000:CC:00.0 was set to 270.00 W from 260.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/270/270_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/270/270_pid-2323403.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May  4 16:47:44 CEST 2026  / 1777906064
+SETTING GPU POWERCAP TO GRAPHICS=280
+Power limit for GPU 00000000:CC:00.0 was set to 280.00 W from 270.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/280/280_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/280/280_pid-2323403.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May  4 16:48:53 CEST 2026  / 1777906133
+SETTING GPU POWERCAP TO GRAPHICS=290
+Power limit for GPU 00000000:CC:00.0 was set to 290.00 W from 280.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/290/290_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/290/290_pid-2323403.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May  4 16:50:01 CEST 2026  / 1777906201
+SETTING GPU POWERCAP TO GRAPHICS=300
+Power limit for GPU 00000000:CC:00.0 was set to 300.00 W from 290.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/300/300_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/300/300_pid-2323403.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May  4 16:51:09 CEST 2026  / 1777906269
+SETTING GPU POWERCAP TO GRAPHICS=310
+Power limit for GPU 00000000:CC:00.0 was set to 310.00 W from 300.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/310/310_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/310/310_pid-2323403.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May  4 16:52:15 CEST 2026  / 1777906335
+SETTING GPU POWERCAP TO GRAPHICS=320
+Power limit for GPU 00000000:CC:00.0 was set to 320.00 W from 310.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/320/320_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/320/320_pid-2323403.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May  4 16:53:21 CEST 2026  / 1777906401
+SETTING GPU POWERCAP TO GRAPHICS=330
+Power limit for GPU 00000000:CC:00.0 was set to 330.00 W from 320.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/330/330_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/330/330_pid-2323403.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May  4 16:54:26 CEST 2026  / 1777906466
+SETTING GPU POWERCAP TO GRAPHICS=340
+Power limit for GPU 00000000:CC:00.0 was set to 340.00 W from 330.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/340/340_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/340/340_pid-2323403.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May  4 16:55:29 CEST 2026  / 1777906529
+SETTING GPU POWERCAP TO GRAPHICS=350
+Power limit for GPU 00000000:CC:00.0 was set to 350.00 W from 340.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/350/350_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/350/350_pid-2323403.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May  4 16:56:33 CEST 2026  / 1777906593
+SETTING GPU POWERCAP TO GRAPHICS=360
+Power limit for GPU 00000000:CC:00.0 was set to 360.00 W from 350.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/360/360_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/360/360_pid-2323403.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May  4 16:57:45 CEST 2026  / 1777906665
+SETTING GPU POWERCAP TO GRAPHICS=370
+Power limit for GPU 00000000:CC:00.0 was set to 370.00 W from 360.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/370/370_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/370/370_pid-2323403.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May  4 16:58:55 CEST 2026  / 1777906735
+SETTING GPU POWERCAP TO GRAPHICS=380
+Power limit for GPU 00000000:CC:00.0 was set to 380.00 W from 370.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/380/380_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/380/380_pid-2323403.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May  4 17:00:09 CEST 2026  / 1777906809
+SETTING GPU POWERCAP TO GRAPHICS=390
+Power limit for GPU 00000000:CC:00.0 was set to 390.00 W from 380.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/390/390_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/390/390_pid-2323403.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May  4 17:01:19 CEST 2026  / 1777906879
+SETTING GPU POWERCAP TO GRAPHICS=400
+Power limit for GPU 00000000:CC:00.0 was set to 400.00 W from 390.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/400/400_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A100-powercap/400/400_pid-2323403.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May  4 17:02:28 CEST 2026  / 1777906948
+Resetting clocks...
+Power limit for GPU 00000000:CC:00.0 was set to 400.00 W from 400.00 W.
+All done.
+Done!

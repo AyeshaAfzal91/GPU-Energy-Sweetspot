@@ -1,0 +1,613 @@
+### This is /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-scripts/benchX-powercap.sh
+#!/bin/bash
+
+set -eu
+
+if [ $# -ne 5 ]; then
+    echo "Usage: ${0} [result-dir] [freq-start] [freq-end] [freq-reset] [freq-step]"
+    exit 1
+fi
+
+# The reason POWERCAP_RESET differs from POWERCAP_END is because of H100 & H200.
+# On our cluster they don't run on the default power limit of 700W, but 500W instead.
+# So allow the caller to reset the powerlimit to a custom one after benching.
+POWERCAP_START="${2}"
+POWERCAP_END="${3}"
+POWERCAP_RESET="${4}"
+POWERCAP_STEP="${5}"
+
+function reset_powercap() {
+    echo "Resetting clocks..."
+    sudo nvidia-smi --power-limit="${POWERCAP_RESET}"
+    echo "Done!"
+}
+
+trap 'reset_powercap' 15
+
+RESULT_DIR="$(readlink -f "${1}")"
+rm -fr "${RESULT_DIR}"
+mkdir -p "${RESULT_DIR}"
+
+LOG_FILE="${RESULT_DIR}/firestarter-bench-`date +%Y%m%d`-`hostname -s`.$$.log"
+echo "Saving bench log also to log file ..."
+echo "Please be patient ..."
+exec > >( tee "${LOG_FILE}" ) 2>&1
+
+# save script for reference :)
+echo "### This is ${0}"
+cat "${0}"
+
+echo "Start: `date`  / `date +%s`"
+
+echo "########################################"
+
+BINARY=/home/hpc/unrz/unrz104h/Projects/FIRESTARTER/sources/build/src/FIRESTARTER_CUDA
+
+#cat /proc/cpuinfo
+
+module load cuda/12.9.0
+
+export CUDA_VISIBLE_DEVICES=0
+nvidia-smi -i ${CUDA_VISIBLE_DEVICES}
+
+for ((POWERCAP=POWERCAP_START; POWERCAP<=POWERCAP_END; POWERCAP+=POWERCAP_STEP)); do
+    if (( POWERCAP > POWERCAP_END )); then
+        POWERCAP=${POWERCAP_END}
+    fi
+
+    echo "SETTING GPU POWERCAP TO GRAPHICS=${POWERCAP}"
+    sudo /usr/bin/nvidia-smi --power-limit="${POWERCAP}"
+
+    SUB_RESULT_DIR="${RESULT_DIR}/${POWERCAP}"
+    mkdir -p "${SUB_RESULT_DIR}"
+
+    NVLOG_FILE="${SUB_RESULT_DIR}/${POWERCAP}_powerlog.csv"
+    FSLOG_FILE="${SUB_RESULT_DIR}/${POWERCAP}_pid-$$.fsout"
+
+    echo "Nvidia Log: ${NVLOG_FILE}"
+    echo "FIRESTARTER Log: ${FSLOG_FILE}"
+
+    nvidia-smi -i "${CUDA_VISIBLE_DEVICES}" --loop-ms=100 --query-gpu=timestamp,power.draw,utilization.gpu --format=csv > "${NVLOG_FILE}" & POWER_PID=$!
+    "${BINARY}" -n 1 -l 1 -t 60 --period 1000000 > "${FSLOG_FILE}"
+    kill "${POWER_PID}"
+
+    echo "End: `date`  / `date +%s`"
+done
+
+reset_powercap
+Start: Tue May  5 09:02:25 AM CEST 2026  / 1777964545
+########################################
+Tue May  5 09:02:25 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 595.58.03              Driver Version: 595.58.03      CUDA Version: 13.2     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA H200                    On  |   00000000:A6:00.0 Off |                    0 |
+| N/A   36C    P0             76W /  600W |       0MiB / 143771MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+SETTING GPU POWERCAP TO GRAPHICS=200
+Power limit for GPU 00000000:A6:00.0 was set to 200.00 W from 600.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/200/200_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/200/200_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:03:43 AM CEST 2026  / 1777964623
+SETTING GPU POWERCAP TO GRAPHICS=210
+Power limit for GPU 00000000:A6:00.0 was set to 210.00 W from 200.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/210/210_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/210/210_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:04:49 AM CEST 2026  / 1777964689
+SETTING GPU POWERCAP TO GRAPHICS=220
+Power limit for GPU 00000000:A6:00.0 was set to 220.00 W from 210.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/220/220_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/220/220_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:06:50 AM CEST 2026  / 1777964810
+SETTING GPU POWERCAP TO GRAPHICS=230
+Power limit for GPU 00000000:A6:00.0 was set to 230.00 W from 220.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/230/230_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/230/230_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:08:45 AM CEST 2026  / 1777964926
+SETTING GPU POWERCAP TO GRAPHICS=240
+Power limit for GPU 00000000:A6:00.0 was set to 240.00 W from 230.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/240/240_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/240/240_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:10:45 AM CEST 2026  / 1777965045
+SETTING GPU POWERCAP TO GRAPHICS=250
+Power limit for GPU 00000000:A6:00.0 was set to 250.00 W from 240.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/250/250_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/250/250_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:12:25 AM CEST 2026  / 1777965145
+SETTING GPU POWERCAP TO GRAPHICS=260
+Power limit for GPU 00000000:A6:00.0 was set to 260.00 W from 250.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/260/260_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/260/260_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:14:04 AM CEST 2026  / 1777965244
+SETTING GPU POWERCAP TO GRAPHICS=270
+Power limit for GPU 00000000:A6:00.0 was set to 270.00 W from 260.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/270/270_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/270/270_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:15:32 AM CEST 2026  / 1777965332
+SETTING GPU POWERCAP TO GRAPHICS=280
+Power limit for GPU 00000000:A6:00.0 was set to 280.00 W from 270.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/280/280_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/280/280_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:17:07 AM CEST 2026  / 1777965427
+SETTING GPU POWERCAP TO GRAPHICS=290
+Power limit for GPU 00000000:A6:00.0 was set to 290.00 W from 280.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/290/290_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/290/290_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:18:41 AM CEST 2026  / 1777965521
+SETTING GPU POWERCAP TO GRAPHICS=300
+Power limit for GPU 00000000:A6:00.0 was set to 300.00 W from 290.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/300/300_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/300/300_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:20:01 AM CEST 2026  / 1777965601
+SETTING GPU POWERCAP TO GRAPHICS=310
+Power limit for GPU 00000000:A6:00.0 was set to 310.00 W from 300.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/310/310_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/310/310_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:21:24 AM CEST 2026  / 1777965684
+SETTING GPU POWERCAP TO GRAPHICS=320
+Power limit for GPU 00000000:A6:00.0 was set to 320.00 W from 310.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/320/320_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/320/320_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:22:37 AM CEST 2026  / 1777965757
+SETTING GPU POWERCAP TO GRAPHICS=330
+Power limit for GPU 00000000:A6:00.0 was set to 330.00 W from 320.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/330/330_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/330/330_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:23:50 AM CEST 2026  / 1777965830
+SETTING GPU POWERCAP TO GRAPHICS=340
+Power limit for GPU 00000000:A6:00.0 was set to 340.00 W from 330.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/340/340_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/340/340_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:25:03 AM CEST 2026  / 1777965903
+SETTING GPU POWERCAP TO GRAPHICS=350
+Power limit for GPU 00000000:A6:00.0 was set to 350.00 W from 340.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/350/350_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/350/350_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:26:20 AM CEST 2026  / 1777965980
+SETTING GPU POWERCAP TO GRAPHICS=360
+Power limit for GPU 00000000:A6:00.0 was set to 360.00 W from 350.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/360/360_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/360/360_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:27:36 AM CEST 2026  / 1777966056
+SETTING GPU POWERCAP TO GRAPHICS=370
+Power limit for GPU 00000000:A6:00.0 was set to 370.00 W from 360.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/370/370_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/370/370_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:28:53 AM CEST 2026  / 1777966133
+SETTING GPU POWERCAP TO GRAPHICS=380
+Power limit for GPU 00000000:A6:00.0 was set to 380.00 W from 370.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/380/380_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/380/380_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:30:07 AM CEST 2026  / 1777966207
+SETTING GPU POWERCAP TO GRAPHICS=390
+Power limit for GPU 00000000:A6:00.0 was set to 390.00 W from 380.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/390/390_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/390/390_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:31:21 AM CEST 2026  / 1777966281
+SETTING GPU POWERCAP TO GRAPHICS=400
+Power limit for GPU 00000000:A6:00.0 was set to 400.00 W from 390.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/400/400_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/400/400_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:32:33 AM CEST 2026  / 1777966353
+SETTING GPU POWERCAP TO GRAPHICS=410
+Power limit for GPU 00000000:A6:00.0 was set to 410.00 W from 400.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/410/410_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/410/410_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:33:41 AM CEST 2026  / 1777966421
+SETTING GPU POWERCAP TO GRAPHICS=420
+Power limit for GPU 00000000:A6:00.0 was set to 420.00 W from 410.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/420/420_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/420/420_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:34:44 AM CEST 2026  / 1777966484
+SETTING GPU POWERCAP TO GRAPHICS=430
+Power limit for GPU 00000000:A6:00.0 was set to 430.00 W from 420.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/430/430_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/430/430_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:36:13 AM CEST 2026  / 1777966573
+SETTING GPU POWERCAP TO GRAPHICS=440
+Power limit for GPU 00000000:A6:00.0 was set to 440.00 W from 430.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/440/440_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/440/440_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:37:40 AM CEST 2026  / 1777966660
+SETTING GPU POWERCAP TO GRAPHICS=450
+Power limit for GPU 00000000:A6:00.0 was set to 450.00 W from 440.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/450/450_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/450/450_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:39:05 AM CEST 2026  / 1777966745
+SETTING GPU POWERCAP TO GRAPHICS=460
+Power limit for GPU 00000000:A6:00.0 was set to 460.00 W from 450.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/460/460_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/460/460_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:40:28 AM CEST 2026  / 1777966828
+SETTING GPU POWERCAP TO GRAPHICS=470
+Power limit for GPU 00000000:A6:00.0 was set to 470.00 W from 460.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/470/470_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/470/470_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:41:49 AM CEST 2026  / 1777966909
+SETTING GPU POWERCAP TO GRAPHICS=480
+Power limit for GPU 00000000:A6:00.0 was set to 480.00 W from 470.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/480/480_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/480/480_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:43:08 AM CEST 2026  / 1777966988
+SETTING GPU POWERCAP TO GRAPHICS=490
+Power limit for GPU 00000000:A6:00.0 was set to 490.00 W from 480.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/490/490_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/490/490_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:44:27 AM CEST 2026  / 1777967067
+SETTING GPU POWERCAP TO GRAPHICS=500
+Power limit for GPU 00000000:A6:00.0 was set to 500.00 W from 490.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/500/500_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/500/500_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:45:43 AM CEST 2026  / 1777967143
+SETTING GPU POWERCAP TO GRAPHICS=510
+Power limit for GPU 00000000:A6:00.0 was set to 510.00 W from 500.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/510/510_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/510/510_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:46:59 AM CEST 2026  / 1777967219
+SETTING GPU POWERCAP TO GRAPHICS=520
+Power limit for GPU 00000000:A6:00.0 was set to 520.00 W from 510.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/520/520_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/520/520_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:48:13 AM CEST 2026  / 1777967293
+SETTING GPU POWERCAP TO GRAPHICS=530
+Power limit for GPU 00000000:A6:00.0 was set to 530.00 W from 520.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/530/530_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/530/530_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:49:27 AM CEST 2026  / 1777967367
+SETTING GPU POWERCAP TO GRAPHICS=540
+Power limit for GPU 00000000:A6:00.0 was set to 540.00 W from 530.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/540/540_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/540/540_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:50:39 AM CEST 2026  / 1777967439
+SETTING GPU POWERCAP TO GRAPHICS=550
+Power limit for GPU 00000000:A6:00.0 was set to 550.00 W from 540.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/550/550_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/550/550_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:51:50 AM CEST 2026  / 1777967510
+SETTING GPU POWERCAP TO GRAPHICS=560
+Power limit for GPU 00000000:A6:00.0 was set to 560.00 W from 550.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/560/560_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/560/560_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:53:00 AM CEST 2026  / 1777967580
+SETTING GPU POWERCAP TO GRAPHICS=570
+Power limit for GPU 00000000:A6:00.0 was set to 570.00 W from 560.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/570/570_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/570/570_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:54:09 AM CEST 2026  / 1777967649
+SETTING GPU POWERCAP TO GRAPHICS=580
+Power limit for GPU 00000000:A6:00.0 was set to 580.00 W from 570.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/580/580_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/580/580_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:55:18 AM CEST 2026  / 1777967718
+SETTING GPU POWERCAP TO GRAPHICS=590
+Power limit for GPU 00000000:A6:00.0 was set to 590.00 W from 580.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/590/590_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/590/590_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:56:26 AM CEST 2026  / 1777967786
+SETTING GPU POWERCAP TO GRAPHICS=600
+Power limit for GPU 00000000:A6:00.0 was set to 600.00 W from 590.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/600/600_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/600/600_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:57:33 AM CEST 2026  / 1777967853
+SETTING GPU POWERCAP TO GRAPHICS=610
+Power limit for GPU 00000000:A6:00.0 was set to 610.00 W from 600.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/610/610_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/610/610_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:58:40 AM CEST 2026  / 1777967920
+SETTING GPU POWERCAP TO GRAPHICS=620
+Power limit for GPU 00000000:A6:00.0 was set to 620.00 W from 610.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/620/620_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/620/620_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 09:59:46 AM CEST 2026  / 1777967986
+SETTING GPU POWERCAP TO GRAPHICS=630
+Power limit for GPU 00000000:A6:00.0 was set to 630.00 W from 620.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/630/630_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/630/630_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 10:00:52 AM CEST 2026  / 1777968052
+SETTING GPU POWERCAP TO GRAPHICS=640
+Power limit for GPU 00000000:A6:00.0 was set to 640.00 W from 630.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/640/640_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/640/640_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 10:01:57 AM CEST 2026  / 1777968117
+SETTING GPU POWERCAP TO GRAPHICS=650
+Power limit for GPU 00000000:A6:00.0 was set to 650.00 W from 640.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/650/650_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/650/650_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 10:03:01 AM CEST 2026  / 1777968181
+SETTING GPU POWERCAP TO GRAPHICS=660
+Power limit for GPU 00000000:A6:00.0 was set to 660.00 W from 650.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/660/660_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/660/660_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 10:04:04 AM CEST 2026  / 1777968244
+SETTING GPU POWERCAP TO GRAPHICS=670
+Power limit for GPU 00000000:A6:00.0 was set to 670.00 W from 660.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/670/670_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/670/670_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 10:05:07 AM CEST 2026  / 1777968307
+SETTING GPU POWERCAP TO GRAPHICS=680
+Power limit for GPU 00000000:A6:00.0 was set to 680.00 W from 670.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/680/680_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/680/680_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 10:06:10 AM CEST 2026  / 1777968370
+SETTING GPU POWERCAP TO GRAPHICS=690
+Power limit for GPU 00000000:A6:00.0 was set to 690.00 W from 680.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/690/690_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/690/690_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 10:07:13 AM CEST 2026  / 1777968433
+SETTING GPU POWERCAP TO GRAPHICS=700
+Power limit for GPU 00000000:A6:00.0 was set to 700.00 W from 690.00 W.
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/700/700_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-H200-powercap/700/700_pid-1724662.fsout
+Warning: AMD Family 25, Model 17, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_SKL_XEONEP_AVX512_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Tue May  5 10:08:15 AM CEST 2026  / 1777968495
+Resetting clocks...
+Power limit for GPU 00000000:A6:00.0 was set to 500.00 W from 700.00 W.
+All done.
+Done!
