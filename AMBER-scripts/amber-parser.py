@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import numpy as np
 from scipy.optimize import curve_fit
+from adjustText import adjust_text
 
 # ==========================================
 # CONFIGURATION
@@ -248,9 +249,11 @@ if __name__ == "__main__":
                 if ssub.empty: continue
                 plt.scatter(ssub["ns_day"], ssub["avg_power_w"], s=12, label=bench)
                 plt.plot(ssub["ns_day"], ssub["avg_power_w"], linewidth=0.8)
-            plt.xlabel("Performance (ns/day)")
-            plt.ylabel(f"GPU Avg Power (W) (util ≥ {UTIL_THRESHOLD:.0f}%)")
-            plt.title(f"GPU Z-plot: Power vs Performance — {arch}")
+            plt.xlabel("Performance [ns/day]")
+            plt.ylabel(f"GPU Avg Power [W]")
+            #plt.title(f"GPU Z-plot: Power vs Performance — {arch}")
+            plt.ylim(ymin=0)
+            plt.xlim(xmin=0)
             plt.legend(fontsize=8, ncol=2)
             plt.savefig(os.path.join(OUTDIR, f"{arch}_gpu_zplot_normal.png"), dpi=300, bbox_inches="tight")
             plt.close()
@@ -269,9 +272,11 @@ if __name__ == "__main__":
                 if ssub.empty: continue
                 plt.scatter(ssub["atom_ns_day"], ssub["avg_power_w"], s=12, label=bench)
                 plt.plot(ssub["atom_ns_day"], ssub["avg_power_w"], linewidth=0.8)
-            plt.xlabel("Size-weighted performance (atom-ns/day)")
-            plt.ylabel(f"GPU Avg Power (W) (util ≥ {UTIL_THRESHOLD:.0f}%)")
-            plt.title(f"GPU Z-plot: Power vs Size-weighted Performance — {arch}")
+            plt.xlabel("Size-weighted performance [atom-ns/day]")
+            plt.ylabel(f"GPU Avg Power [W]")
+            #plt.title(f"GPU Z-plot: Power vs Size-weighted Performance — {arch}")
+            plt.ylim(ymin=0)
+            plt.xlim(xmin=0)
             plt.legend(fontsize=8, ncol=2)
             plt.savefig(os.path.join(OUTDIR, f"{arch}_gpu_zplot_weighted.png"), dpi=300, bbox_inches="tight")
             plt.close()
@@ -283,6 +288,15 @@ if __name__ == "__main__":
         print("Generating Publication Energy Z-plots...")
         for arch, sub in df.groupby("arch"):
             plt.figure(figsize=(9, 6))
+            
+            texts = []
+            lines = []
+            
+            # 1. No more massive y_nudges! Just a tiny 1% upward bias to break ties.
+            y_max = sub["efficiency"].max()
+            x_max = sub["atom_ns_day"].max()
+            y_bias = y_max * 0.15 
+
             for bench, ssub in sub.groupby("benchmark"):
                 is_freq = ssub["run_type"].iloc[0] == "frequency"
                 sort_col = "gfx_freq_mhz" if is_freq else "powercap_w"
@@ -295,7 +309,7 @@ if __name__ == "__main__":
 
                 max_eff_idx, sweet_spot_idx = ssub["efficiency"].idxmax(), ssub["edp"].idxmin()
                 eff_row, sweet_row = ssub.loc[max_eff_idx], ssub.loc[sweet_spot_idx]
-                
+
                 eff_perf, eff_eff = eff_row["atom_ns_day"], eff_row["efficiency"]
                 eff_val = int(eff_row['gfx_freq_mhz']) if is_freq else int(eff_row['powercap_w'])
                 eff_label = f"{eff_val} {'MHz' if is_freq else 'W'}"
@@ -304,29 +318,77 @@ if __name__ == "__main__":
                 opt_val = int(sweet_row['gfx_freq_mhz']) if is_freq else int(sweet_row['powercap_w'])
                 edp_label = f"{opt_val} {'MHz' if is_freq else 'W'}"
 
+                bbox_props = dict(boxstyle="round,pad=0.2", fc="white", ec="none", alpha=0.85)
+                arrow_props = dict(arrowstyle="-|>", color=line_color, lw=1.2, shrinkA=2, shrinkB=4)
+
+                # ==========================================
+                # SPAWN ON DOT (Let the algorithm push them out!)
+                # ==========================================
                 if max_eff_idx == sweet_spot_idx:
                     plt.scatter(eff_perf, eff_eff, color='black', s=45, marker="D", zorder=5)
-                    plt.annotate(eff_label, (eff_perf, eff_eff), textcoords="offset points", xytext=(0, 12), ha='center', fontsize=8, rotation=0, color=line_color)
-                    plt.annotate(edp_label, (opt_perf, opt_eff), textcoords="offset points", xytext=(10, 10), ha='left', fontsize=8, rotation=-45, color=line_color)
+                    t = plt.annotate(
+                        eff_label, xy=(eff_perf, eff_eff), 
+                        xytext=(eff_perf, eff_eff + y_bias), # Spawn basically on top of the dot
+                        ha='center', va='center', fontsize=10, 
+                        color=line_color, bbox=bbox_props, arrowprops=arrow_props 
+                    )
+                    texts.append(t)
                 else:
                     plt.scatter(eff_perf, eff_eff, color='black', s=40, marker="s", zorder=5)
-                    plt.annotate(eff_label, (eff_perf, eff_eff), textcoords="offset points", xytext=(0, 8), ha='center', fontsize=8, rotation=0, color=line_color)
+                    t1 = plt.annotate(
+                        eff_label, xy=(eff_perf, eff_eff), 
+                        xytext=(eff_perf, eff_eff + y_bias), 
+                        ha='center', va='center', fontsize=10, 
+                        color=line_color, bbox=bbox_props, arrowprops=arrow_props 
+                    )
+                    texts.append(t1)
                     
                     plt.scatter(opt_perf, opt_eff, color='black', s=40, marker="o", zorder=5)
-                    plt.annotate(edp_label, (opt_perf, opt_eff), textcoords="offset points", xytext=(-8, -8), ha='left', fontsize=8, rotation=-45, color=line_color)
+                    t2 = plt.annotate(
+                        edp_label, xy=(opt_perf, opt_eff), 
+                        xytext=(opt_perf, opt_eff + y_bias), 
+                        ha='center', va='center', fontsize=10, 
+                        color=line_color, bbox=bbox_props, arrowprops=arrow_props 
+                    )
+                    texts.append(t2)
 
-            plt.xlabel("Size-weighted performance (atom-ns/day)")
-            plt.ylabel(f"Efficiency (atom-ns/day/W)")
-            #plt.title(f"Energy Z-plot — {arch}")
+            plt.xlabel("Size-weighted performance [atom-ns/day]")
+            plt.ylabel("Efficiency [atom-ns/day/W]")
             
-            # Custom Legend Handling
+            # Massive empty space on the right side for the legend
+            plt.ylim(0, y_max * 1.25) 
+            plt.xlim(0, x_max * 1.35) 
+            
+            # ==========================================
+            # 1. DRAW THE LEGEND FIRST
+            # ==========================================
             handles, labels = plt.gca().get_legend_handles_labels()
-            marker_max = Line2D([0], [0], marker='s', color='w', markerfacecolor='black', markersize=7, label='Max $\\eta$')
-            marker_edp = Line2D([0], [0], marker='o', color='w', markerfacecolor='black', markersize=7, label='Min EDP')
-            marker_both = Line2D([0], [0], marker='D', color='w', markerfacecolor='black', markersize=7, label='Coincide')
-            handles.extend([marker_max, marker_edp, marker_both])
+            sorted_pairs = sorted(zip(handles, labels), key=lambda x: ATOM_COUNTS.get(x[1], 0))
+            sorted_handles, sorted_labels = zip(*sorted_pairs)
+            sorted_handles = list(sorted_handles)
             
-            plt.legend(handles=handles, fontsize=8, ncol=2, loc='lower right')
+            marker_max = Line2D([0], [0], marker='s', color='w', markerfacecolor='black', markersize=6, label='Max $\\eta$')
+            marker_edp = Line2D([0], [0], marker='o', color='w', markerfacecolor='black', markersize=6, label='Min EDP')
+            marker_both = Line2D([0], [0], marker='D', color='w', markerfacecolor='black', markersize=6, label='Coincide')
+            sorted_handles.extend([marker_max, marker_edp, marker_both])
+            
+            my_legend = plt.legend(handles=sorted_handles, fontsize=9, ncol=2, loc='lower right')
+            
+            # ==========================================
+            # 2. TAMED AUTO-ADJUSTER (The Point Cloud Method)
+            # ==========================================
+            adjust_text(texts,
+                        # -> NEW: Feeds EVERY coordinate on the graph into the collision detector!
+                        x=sub["atom_ns_day"].values, 
+                        y=sub["efficiency"].values,
+                        add_objects=[my_legend],  
+                        min_arrow_dist=20, # Forces arrows to be at least 20px long
+                        expand_points=(3.0, 3.0), # -> MASSIVE padding around the dots to simulate line avoidance
+                        expand_text=(1.5, 1.5),   # -> Prevents text crowding
+                        force_points=(3.5, 4.0),  # -> Violently ejects text away from the clusters
+                        force_text=(3.0, 3.0),    # -> Violently ejects text away from each other
+                        max_iterations=3000)      # -> Gives the math engine plenty of time to resolve the layout
+            
             plt.grid(True, linestyle="--", alpha=0.4)
             plt.savefig(os.path.join(OUTDIR, f"{arch}_gpu_zplot_energy.png"), dpi=300, bbox_inches="tight")
             plt.close()
@@ -339,7 +401,7 @@ if __name__ == "__main__":
         for arch, sub_arch in df.groupby("arch"):
             is_freq = sub_arch["run_type"].iloc[0] == "frequency"
             x_col = "gfx_freq_mhz" if is_freq else "powercap_w"
-            x_label = "Graphics frequency (MHz)" if is_freq else "Power cap (W)"
+            x_label = "Graphics frequency [MHz]" if is_freq else "Power cap [W]"
             
             if x_col not in sub_arch.columns: continue
 
@@ -355,8 +417,10 @@ if __name__ == "__main__":
                 plt.plot(s[x_col], s["avg_power_w"], marker="o", linestyle="-", linewidth=1, markersize=3, label=bench)
                 
             plt.xlabel(x_label)
-            plt.ylabel("Average GPU Power (W)")
-            plt.title(f"Avg GPU Power vs {'Graphics frequency' if is_freq else 'Power cap'} — {arch}")
+            plt.ylabel("Average GPU Power [W]")
+            #plt.title(f"Avg GPU Power vs {'Graphics frequency' if is_freq else 'Power cap'} — {arch}")
+            plt.ylim(ymin=0)
+            plt.xlim(xmin=0)
             plt.legend(fontsize=8, ncol=2)
             plt.grid(True)
             plt.ylim(ymin=0)
@@ -371,7 +435,7 @@ if __name__ == "__main__":
         for arch, sub_arch in df.groupby("arch"):
             is_freq = sub_arch["run_type"].iloc[0] == "frequency"
             x_col = "gfx_freq_mhz" if is_freq else "powercap_w"
-            x_label = "Graphics frequency (MHz)" if is_freq else "Power cap (W)"
+            x_label = "Graphics frequency [MHz]" if is_freq else "Power cap [W]"
             
             if x_col not in sub_arch.columns: continue
 
@@ -387,8 +451,10 @@ if __name__ == "__main__":
                 plt.plot(s[x_col], s["atom_ns_day"], marker="o", linestyle="-", linewidth=1, markersize=3, label=bench)
                 
             plt.xlabel(x_label)
-            plt.ylabel("Size-weighted performance (atom-ns/day)")
-            plt.title(f"Size-weighted Performance vs {'Graphics frequency' if is_freq else 'Power cap'} — {arch}")
+            plt.ylabel("Size-weighted performance [atom-ns/day]")
+            #plt.title(f"Size-weighted Performance vs {'Graphics frequency' if is_freq else 'Power cap'} — {arch}")
+            plt.ylim(ymin=0)
+            plt.xlim(xmin=0)
             plt.legend(fontsize=8, ncol=2)
             plt.grid(True)
             plt.savefig(os.path.join(OUTDIR, f"{arch}_atomnsday_vs_limits.png"), dpi=300, bbox_inches="tight")
@@ -490,7 +556,9 @@ if __name__ == "__main__":
 
                 plt.xlabel("Graphics frequency (MHz)")
                 plt.ylabel("Average GPU Power (W)")
-                plt.title(f"Piecewise Power Modeling — {arch}")
+                #plt.title(f"Piecewise Power Modeling — {arch}")
+                plt.ylim(ymin=0)
+                plt.xlim(xmin=0)
                 
                 if custom_handles:
                     plt.legend(handles=custom_handles, fontsize=8, bbox_to_anchor=(1.02, 1), loc='upper left')
