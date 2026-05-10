@@ -7,9 +7,8 @@ import re
 import sys
 
 class Result:
-    def __init__(self, powerdraw, duration, gflops):
+    def __init__(self, powerdraw, gflops):
         self.powerdraw = powerdraw
-        self.duration = duration
         self.gflops = gflops
 
 def scan_results():
@@ -48,7 +47,7 @@ def scan_subresults(path, arch, is_freq):
 
         parse_run(csv_path, log_path, arch, is_freq, int(d_match[1]))
 
-def scan_nvidiasmi_csv(path, arch, is_freq, value):
+def scan_nvidiasmi_csv(path):
     # Iterate over all files, which looks like *.csv
     # Take the first one and parse that one
     for f in os.scandir(path):
@@ -100,17 +99,23 @@ def parse_run(csv_path, log_path, arch, is_freq, value):
     if power_iters == 0:
         raise Exception("Not enough results in csv: {}", csv_path)
 
-    # TODO fix this
-    if is_freq:
-        frequency_results[arch][value] = power_sum / power_iters
-    else:
-        powercap_results[arch][value] = power_sum / power_iters
-
-    # TODO parse GFLOPS from firestarter log:
+    # parse GFLOPS from firestarter log:
     with open(log_path, "r") as log_file:
+        #gflops = -1
+        gflops = 0
         for line in log_file:
-            if 
-    # ^.*: ((?:0|[1-9]\d*)(?:\.\d+)?) GFLOPS.*$
+            m = re.fullmatch("^.*GPU.*: ((?:0|[1-9]\\d*)(?:\\.\\d+)?) GFLOPS.*$", line.strip())
+            if m != None:
+                gflops = float(m[1])
+                break
+        if gflops < 0:
+            raise Exception("Unable to find GPU GFLOPS in file: {}".format(log_path))
+
+    if is_freq:
+        frequency_results[arch][value] = Result(power_sum / power_iters, gflops)
+    else:
+        powercap_results[arch][value] = Result(power_sum / power_iters, gflops)
+
 
 def create_power_plots():
     results = [
@@ -138,7 +143,7 @@ def create_power_plots():
 
         for arch_name, arch_dict in result["result"].items():
             keys = sorted(arch_dict)
-            values = [arch_dict[k] for k in keys]
+            values = [arch_dict[k].powerdraw for k in keys]
             plt.plot(keys, values, marker="o", linestyle="-", linewidth=1, markersize=3, label=arch_name)
 
         plt.ylim(ymin=0)
