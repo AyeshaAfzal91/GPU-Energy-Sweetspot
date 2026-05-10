@@ -138,7 +138,7 @@ def create_power_plots():
         plt.figure(figsize=(9, 6))
         plt.xlabel(result["xlabel"])
         plt.ylabel("Average GPU power draw [W]")
-        plt.title("Avg GPU power draw vs {}".format(result["vs"]))
+        #plt.title("Avg GPU power draw vs {}".format(result["vs"]))
         plt.legend(fontsize=8, ncol=2)
         plt.grid(True)
 
@@ -161,7 +161,7 @@ def create_power_plots():
         plt.figure(figsize=(9, 6))
         plt.xlabel("Performance [GFLOPS]")
         plt.ylabel("Efficiency [GFLOPS / W]")
-        plt.title("ABCD")
+        #plt.title("ABCD")
         plt.legend(fontsize=8, ncol=2)
         plt.grid(True)
 
