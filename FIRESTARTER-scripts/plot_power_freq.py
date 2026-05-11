@@ -12,6 +12,11 @@ class Result:
         self.powerdraw = powerdraw
         self.gflops = gflops
 
+class Label:
+    def __init__(self, xoff, yoff):
+        self.xoff = xoff
+        self.yoff = yoff
+
 def scan_results():
     # Iterate over all directories and search those, which match pattern "FIRESTARTER-*-{frequency,powercap}"
     for d in os.scandir(results_dir):
@@ -144,12 +149,14 @@ def create_power_plots():
             "xlabel": "Power cap [W]",
             "vs": "Power cap",
             "result": powercap_results,
+            "unit": "W",
         },
         {
             "name": "frequency",
             "xlabel": "Graphics frequency [MHz]",
             "vs": "Graphics frequency",
             "result": frequency_results,
+            "unit": "MHz",
         },
     ]
 
@@ -163,9 +170,9 @@ def create_power_plots():
         plt.grid(True)
 
         for arch_name, arch_dict in result["result"].items():
-            keys = sorted(arch_dict)
-            values = [arch_dict[k].powerdraw for k in keys]
-            plt.plot(keys, values, marker="o", linestyle="-", linewidth=1, markersize=3, label=arch_name)
+            xvalues = sorted(arch_dict)
+            yvalues = [arch_dict[k].powerdraw for k in xvalues]
+            plt.plot(xvalues, yvalues, marker="o", linestyle="-", linewidth=1, markersize=3, label=arch_name)
 
         plt.ylim(ymin=0)
         plt.xlim(xmin=0)
@@ -185,11 +192,38 @@ def create_power_plots():
         plt.legend(fontsize=8, ncol=2)
         plt.grid(True)
 
+        labels = {
+            "powercap": {
+                "A40": Label(-4000, 7),
+                "A100": Label(-4000, 7),
+                "H100": Label(2000, 0),
+                "H200": Label(2000, 0),
+            },
+            "frequency": {
+                "A40": Label(2000, 2),
+                "A100": Label(-10000, 5),
+                "H100": Label(2000, 0),
+                "H200": Label(-3000, -20),
+            },
+        }
+
         for arch_name, arch_dict in result["result"].items():
             keys = sorted(arch_dict)
             xvalues = [arch_dict[k].gflops for k in keys]
             yvalues = [arch_dict[k].gflops / arch_dict[k].powerdraw for k in keys]
             plt.plot(xvalues, yvalues, marker="o", linestyle="-", linewidth=1, markersize=3, label=arch_name)
+
+            ymaxind = yvalues.index(max(yvalues))
+            xmax = xvalues[ymaxind]
+            ymax = yvalues[ymaxind]
+            l = labels[result["name"]][arch_name]
+            plt.annotate(
+                "{} {}".format(keys[ymaxind], result["unit"]),
+                xy=(xmax, ymax),
+                xytext=(xmax + l.xoff, ymax + l.yoff),
+                arrowprops=dict(arrowstyle='->', lw=2),
+                fontsize=12,
+            )
 
         plt.ylim(ymin=0)
         plt.xlim(xmin=0)
