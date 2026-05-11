@@ -1,0 +1,1131 @@
+### This is /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-scripts/benchX-freq.sh
+#!/bin/bash
+
+set -eu
+
+if [ $# -ne 4 ]; then
+    echo "Usage: ${0} [result-dir] [freq-start] [freq-end] [freq-step]"
+    exit 1
+fi
+
+function reset_clocks() {
+    echo "Resetting clocks..."
+    sudo nvidia-smi -rgc
+    echo "Done!"
+}
+
+trap 'reset_clocks' 15
+
+RESULT_DIR="$(readlink -f "${1}")"
+rm -fr "${RESULT_DIR}"
+mkdir -p "${RESULT_DIR}"
+
+FREQ_START="${2}"
+FREQ_END="${3}"
+FREQ_STEP="${4}"
+
+LOG_FILE="${RESULT_DIR}/firestarter-bench-`date +%Y%m%d`-`hostname -s`.$$.log"
+echo "Saving bench log also to log file ..."
+echo "Please be patient ..."
+exec > >( tee "${LOG_FILE}" ) 2>&1
+
+# save script for reference :)
+echo "### This is ${0}"
+cat "${0}"
+
+echo "Start: `date`  / `date +%s`"
+
+echo "########################################"
+
+BINARY=/home/hpc/unrz/unrz104h/Projects/FIRESTARTER/sources/build/src/FIRESTARTER_CUDA
+
+#cat /proc/cpuinfo
+
+module load cuda/12.9.0
+
+export CUDA_VISIBLE_DEVICES=0
+nvidia-smi -i ${CUDA_VISIBLE_DEVICES}
+
+for ((FREQ=FREQ_START; FREQ<=FREQ_END; FREQ+=FREQ_STEP)); do
+    if (( FREQ > FREQ_END )); then
+        FREQ=${FREQ_END}
+    fi
+    # === PARSE GPU CLOCK SETTINGS ===
+    GPU_GRAPHICS_CLOCK="${FREQ}"
+
+    # === SET GPU CLOCKS ===  
+    echo "SETTING GPU CLOCKS TO GRAPHICS=${GPU_GRAPHICS_CLOCK}"
+    sudo /usr/bin/nvidia-smi --lock-gpu-clocks="${GPU_GRAPHICS_CLOCK},${GPU_GRAPHICS_CLOCK}"
+
+    SUB_RESULT_DIR="${RESULT_DIR}/${GPU_GRAPHICS_CLOCK}"
+    mkdir -p "${SUB_RESULT_DIR}"
+
+    NVLOG_FILE="${SUB_RESULT_DIR}/${GPU_GRAPHICS_CLOCK}_powerlog.csv"
+    FSLOG_FILE="${SUB_RESULT_DIR}/${GPU_GRAPHICS_CLOCK}_pid-$$.fsout"
+
+    echo "Nvidia Log: ${NVLOG_FILE}"
+    echo "FIRESTARTER Log: ${FSLOG_FILE}"
+
+    nvidia-smi -i "${CUDA_VISIBLE_DEVICES}" --loop-ms=100 --query-gpu=timestamp,power.draw,utilization.gpu --format=csv > "${NVLOG_FILE}" & POWER_PID=$!
+    "${BINARY}" -n 1 -l 1 -t 60 --period 1000000 > "${FSLOG_FILE}"
+    kill "${POWER_PID}"
+
+    echo "End: `date`  / `date +%s`"
+done
+
+reset_clocks
+Start: Mon May 11 14:07:17 CEST 2026  / 1778501237
+########################################
+Mon May 11 14:07:17 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 595.71.05              Driver Version: 595.71.05      CUDA Version: 13.2     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA A40                     On  |   00000000:41:00.0 Off |                  Off |
+|  0%   35C    P8             41W /  300W |       0MiB /  49140MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+SETTING GPU CLOCKS TO GRAPHICS=210
+GPU clocks set to "(gpuClkMin 210, gpuClkMax 210)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/210/210_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/210/210_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 14:10:02 CEST 2026  / 1778501402
+SETTING GPU CLOCKS TO GRAPHICS=225
+GPU clocks set to "(gpuClkMin 225, gpuClkMax 225)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/225/225_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/225/225_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 14:12:39 CEST 2026  / 1778501559
+SETTING GPU CLOCKS TO GRAPHICS=240
+GPU clocks set to "(gpuClkMin 240, gpuClkMax 240)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/240/240_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/240/240_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 14:15:06 CEST 2026  / 1778501706
+SETTING GPU CLOCKS TO GRAPHICS=255
+GPU clocks set to "(gpuClkMin 255, gpuClkMax 255)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/255/255_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/255/255_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 14:17:24 CEST 2026  / 1778501844
+SETTING GPU CLOCKS TO GRAPHICS=270
+GPU clocks set to "(gpuClkMin 270, gpuClkMax 270)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/270/270_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/270/270_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 14:19:35 CEST 2026  / 1778501975
+SETTING GPU CLOCKS TO GRAPHICS=285
+GPU clocks set to "(gpuClkMin 285, gpuClkMax 285)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/285/285_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/285/285_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 14:21:40 CEST 2026  / 1778502100
+SETTING GPU CLOCKS TO GRAPHICS=300
+GPU clocks set to "(gpuClkMin 300, gpuClkMax 300)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/300/300_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/300/300_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 14:23:38 CEST 2026  / 1778502218
+SETTING GPU CLOCKS TO GRAPHICS=315
+GPU clocks set to "(gpuClkMin 315, gpuClkMax 315)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/315/315_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/315/315_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 14:25:31 CEST 2026  / 1778502331
+SETTING GPU CLOCKS TO GRAPHICS=330
+GPU clocks set to "(gpuClkMin 330, gpuClkMax 330)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/330/330_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/330/330_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 14:27:19 CEST 2026  / 1778502439
+SETTING GPU CLOCKS TO GRAPHICS=345
+GPU clocks set to "(gpuClkMin 345, gpuClkMax 345)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/345/345_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/345/345_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 14:29:02 CEST 2026  / 1778502542
+SETTING GPU CLOCKS TO GRAPHICS=360
+GPU clocks set to "(gpuClkMin 360, gpuClkMax 360)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/360/360_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/360/360_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 14:30:41 CEST 2026  / 1778502641
+SETTING GPU CLOCKS TO GRAPHICS=375
+GPU clocks set to "(gpuClkMin 375, gpuClkMax 375)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/375/375_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/375/375_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 14:32:16 CEST 2026  / 1778502736
+SETTING GPU CLOCKS TO GRAPHICS=390
+GPU clocks set to "(gpuClkMin 390, gpuClkMax 390)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/390/390_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/390/390_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 14:33:48 CEST 2026  / 1778502828
+SETTING GPU CLOCKS TO GRAPHICS=405
+GPU clocks set to "(gpuClkMin 405, gpuClkMax 405)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/405/405_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/405/405_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 14:35:16 CEST 2026  / 1778502916
+SETTING GPU CLOCKS TO GRAPHICS=420
+GPU clocks set to "(gpuClkMin 420, gpuClkMax 420)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/420/420_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/420/420_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 14:36:42 CEST 2026  / 1778503002
+SETTING GPU CLOCKS TO GRAPHICS=435
+GPU clocks set to "(gpuClkMin 435, gpuClkMax 435)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/435/435_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/435/435_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 14:38:04 CEST 2026  / 1778503084
+SETTING GPU CLOCKS TO GRAPHICS=450
+GPU clocks set to "(gpuClkMin 450, gpuClkMax 450)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/450/450_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/450/450_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 14:39:24 CEST 2026  / 1778503164
+SETTING GPU CLOCKS TO GRAPHICS=465
+GPU clocks set to "(gpuClkMin 465, gpuClkMax 465)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/465/465_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/465/465_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 14:40:41 CEST 2026  / 1778503241
+SETTING GPU CLOCKS TO GRAPHICS=480
+GPU clocks set to "(gpuClkMin 480, gpuClkMax 480)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/480/480_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/480/480_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 14:41:56 CEST 2026  / 1778503316
+SETTING GPU CLOCKS TO GRAPHICS=495
+GPU clocks set to "(gpuClkMin 495, gpuClkMax 495)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/495/495_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/495/495_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 14:43:09 CEST 2026  / 1778503389
+SETTING GPU CLOCKS TO GRAPHICS=510
+GPU clocks set to "(gpuClkMin 510, gpuClkMax 510)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/510/510_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/510/510_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 14:44:20 CEST 2026  / 1778503460
+SETTING GPU CLOCKS TO GRAPHICS=525
+GPU clocks set to "(gpuClkMin 525, gpuClkMax 525)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/525/525_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/525/525_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 14:45:29 CEST 2026  / 1778503529
+SETTING GPU CLOCKS TO GRAPHICS=540
+GPU clocks set to "(gpuClkMin 540, gpuClkMax 540)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/540/540_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/540/540_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 14:46:36 CEST 2026  / 1778503596
+SETTING GPU CLOCKS TO GRAPHICS=555
+GPU clocks set to "(gpuClkMin 555, gpuClkMax 555)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/555/555_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/555/555_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 14:47:41 CEST 2026  / 1778503661
+SETTING GPU CLOCKS TO GRAPHICS=570
+GPU clocks set to "(gpuClkMin 570, gpuClkMax 570)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/570/570_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/570/570_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 14:48:45 CEST 2026  / 1778503725
+SETTING GPU CLOCKS TO GRAPHICS=585
+GPU clocks set to "(gpuClkMin 585, gpuClkMax 585)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/585/585_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/585/585_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 14:50:47 CEST 2026  / 1778503847
+SETTING GPU CLOCKS TO GRAPHICS=600
+GPU clocks set to "(gpuClkMin 600, gpuClkMax 600)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/600/600_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/600/600_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 14:52:46 CEST 2026  / 1778503966
+SETTING GPU CLOCKS TO GRAPHICS=615
+GPU clocks set to "(gpuClkMin 615, gpuClkMax 615)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/615/615_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/615/615_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 14:54:42 CEST 2026  / 1778504082
+SETTING GPU CLOCKS TO GRAPHICS=630
+GPU clocks set to "(gpuClkMin 630, gpuClkMax 630)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/630/630_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/630/630_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 14:56:35 CEST 2026  / 1778504195
+SETTING GPU CLOCKS TO GRAPHICS=645
+GPU clocks set to "(gpuClkMin 645, gpuClkMax 645)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/645/645_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/645/645_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 14:58:26 CEST 2026  / 1778504306
+SETTING GPU CLOCKS TO GRAPHICS=660
+GPU clocks set to "(gpuClkMin 660, gpuClkMax 660)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/660/660_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/660/660_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:00:15 CEST 2026  / 1778504415
+SETTING GPU CLOCKS TO GRAPHICS=675
+GPU clocks set to "(gpuClkMin 675, gpuClkMax 675)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/675/675_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/675/675_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:02:01 CEST 2026  / 1778504521
+SETTING GPU CLOCKS TO GRAPHICS=690
+GPU clocks set to "(gpuClkMin 690, gpuClkMax 690)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/690/690_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/690/690_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:03:45 CEST 2026  / 1778504625
+SETTING GPU CLOCKS TO GRAPHICS=705
+GPU clocks set to "(gpuClkMin 705, gpuClkMax 705)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/705/705_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/705/705_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:05:26 CEST 2026  / 1778504726
+SETTING GPU CLOCKS TO GRAPHICS=720
+GPU clocks set to "(gpuClkMin 720, gpuClkMax 720)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/720/720_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/720/720_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:07:06 CEST 2026  / 1778504826
+SETTING GPU CLOCKS TO GRAPHICS=735
+GPU clocks set to "(gpuClkMin 735, gpuClkMax 735)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/735/735_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/735/735_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:08:43 CEST 2026  / 1778504923
+SETTING GPU CLOCKS TO GRAPHICS=750
+GPU clocks set to "(gpuClkMin 750, gpuClkMax 750)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/750/750_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/750/750_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:10:19 CEST 2026  / 1778505019
+SETTING GPU CLOCKS TO GRAPHICS=765
+GPU clocks set to "(gpuClkMin 765, gpuClkMax 765)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/765/765_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/765/765_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:11:53 CEST 2026  / 1778505113
+SETTING GPU CLOCKS TO GRAPHICS=780
+GPU clocks set to "(gpuClkMin 780, gpuClkMax 780)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/780/780_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/780/780_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:13:25 CEST 2026  / 1778505205
+SETTING GPU CLOCKS TO GRAPHICS=795
+GPU clocks set to "(gpuClkMin 795, gpuClkMax 795)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/795/795_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/795/795_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:14:56 CEST 2026  / 1778505296
+SETTING GPU CLOCKS TO GRAPHICS=810
+GPU clocks set to "(gpuClkMin 810, gpuClkMax 810)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/810/810_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/810/810_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:16:25 CEST 2026  / 1778505385
+SETTING GPU CLOCKS TO GRAPHICS=825
+GPU clocks set to "(gpuClkMin 825, gpuClkMax 825)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/825/825_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/825/825_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:17:52 CEST 2026  / 1778505472
+SETTING GPU CLOCKS TO GRAPHICS=840
+GPU clocks set to "(gpuClkMin 840, gpuClkMax 840)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/840/840_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/840/840_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:19:18 CEST 2026  / 1778505558
+SETTING GPU CLOCKS TO GRAPHICS=855
+GPU clocks set to "(gpuClkMin 855, gpuClkMax 855)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/855/855_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/855/855_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:20:42 CEST 2026  / 1778505642
+SETTING GPU CLOCKS TO GRAPHICS=870
+GPU clocks set to "(gpuClkMin 870, gpuClkMax 870)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/870/870_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/870/870_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:22:05 CEST 2026  / 1778505725
+SETTING GPU CLOCKS TO GRAPHICS=885
+GPU clocks set to "(gpuClkMin 885, gpuClkMax 885)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/885/885_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/885/885_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:23:27 CEST 2026  / 1778505807
+SETTING GPU CLOCKS TO GRAPHICS=900
+GPU clocks set to "(gpuClkMin 900, gpuClkMax 900)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/900/900_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/900/900_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:24:47 CEST 2026  / 1778505887
+SETTING GPU CLOCKS TO GRAPHICS=915
+GPU clocks set to "(gpuClkMin 915, gpuClkMax 915)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/915/915_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/915/915_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:26:06 CEST 2026  / 1778505966
+SETTING GPU CLOCKS TO GRAPHICS=930
+GPU clocks set to "(gpuClkMin 930, gpuClkMax 930)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/930/930_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/930/930_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:27:24 CEST 2026  / 1778506044
+SETTING GPU CLOCKS TO GRAPHICS=945
+GPU clocks set to "(gpuClkMin 945, gpuClkMax 945)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/945/945_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/945/945_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:28:40 CEST 2026  / 1778506120
+SETTING GPU CLOCKS TO GRAPHICS=960
+GPU clocks set to "(gpuClkMin 960, gpuClkMax 960)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/960/960_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/960/960_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:29:56 CEST 2026  / 1778506196
+SETTING GPU CLOCKS TO GRAPHICS=975
+GPU clocks set to "(gpuClkMin 975, gpuClkMax 975)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/975/975_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/975/975_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:31:10 CEST 2026  / 1778506270
+SETTING GPU CLOCKS TO GRAPHICS=990
+GPU clocks set to "(gpuClkMin 990, gpuClkMax 990)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/990/990_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/990/990_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:32:23 CEST 2026  / 1778506343
+SETTING GPU CLOCKS TO GRAPHICS=1005
+GPU clocks set to "(gpuClkMin 1005, gpuClkMax 1005)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1005/1005_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1005/1005_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:33:35 CEST 2026  / 1778506415
+SETTING GPU CLOCKS TO GRAPHICS=1020
+GPU clocks set to "(gpuClkMin 1020, gpuClkMax 1020)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1020/1020_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1020/1020_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:34:47 CEST 2026  / 1778506487
+SETTING GPU CLOCKS TO GRAPHICS=1035
+GPU clocks set to "(gpuClkMin 1035, gpuClkMax 1035)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1035/1035_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1035/1035_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:35:57 CEST 2026  / 1778506557
+SETTING GPU CLOCKS TO GRAPHICS=1050
+GPU clocks set to "(gpuClkMin 1050, gpuClkMax 1050)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1050/1050_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1050/1050_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:37:06 CEST 2026  / 1778506626
+SETTING GPU CLOCKS TO GRAPHICS=1065
+GPU clocks set to "(gpuClkMin 1065, gpuClkMax 1065)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1065/1065_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1065/1065_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:38:14 CEST 2026  / 1778506694
+SETTING GPU CLOCKS TO GRAPHICS=1080
+GPU clocks set to "(gpuClkMin 1080, gpuClkMax 1080)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1080/1080_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1080/1080_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:39:22 CEST 2026  / 1778506762
+SETTING GPU CLOCKS TO GRAPHICS=1095
+GPU clocks set to "(gpuClkMin 1095, gpuClkMax 1095)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1095/1095_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1095/1095_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:40:28 CEST 2026  / 1778506828
+SETTING GPU CLOCKS TO GRAPHICS=1110
+GPU clocks set to "(gpuClkMin 1110, gpuClkMax 1110)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1110/1110_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1110/1110_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:41:34 CEST 2026  / 1778506894
+SETTING GPU CLOCKS TO GRAPHICS=1125
+GPU clocks set to "(gpuClkMin 1125, gpuClkMax 1125)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1125/1125_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1125/1125_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:42:38 CEST 2026  / 1778506958
+SETTING GPU CLOCKS TO GRAPHICS=1140
+GPU clocks set to "(gpuClkMin 1140, gpuClkMax 1140)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1140/1140_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1140/1140_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:43:42 CEST 2026  / 1778507022
+SETTING GPU CLOCKS TO GRAPHICS=1155
+GPU clocks set to "(gpuClkMin 1155, gpuClkMax 1155)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1155/1155_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1155/1155_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:44:45 CEST 2026  / 1778507085
+SETTING GPU CLOCKS TO GRAPHICS=1170
+GPU clocks set to "(gpuClkMin 1170, gpuClkMax 1170)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1170/1170_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1170/1170_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:46:18 CEST 2026  / 1778507178
+SETTING GPU CLOCKS TO GRAPHICS=1185
+GPU clocks set to "(gpuClkMin 1185, gpuClkMax 1185)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1185/1185_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1185/1185_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:47:49 CEST 2026  / 1778507269
+SETTING GPU CLOCKS TO GRAPHICS=1200
+GPU clocks set to "(gpuClkMin 1200, gpuClkMax 1200)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1200/1200_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1200/1200_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:49:19 CEST 2026  / 1778507359
+SETTING GPU CLOCKS TO GRAPHICS=1215
+GPU clocks set to "(gpuClkMin 1215, gpuClkMax 1215)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1215/1215_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1215/1215_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:50:47 CEST 2026  / 1778507447
+SETTING GPU CLOCKS TO GRAPHICS=1230
+GPU clocks set to "(gpuClkMin 1230, gpuClkMax 1230)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1230/1230_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1230/1230_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:52:14 CEST 2026  / 1778507534
+SETTING GPU CLOCKS TO GRAPHICS=1245
+GPU clocks set to "(gpuClkMin 1245, gpuClkMax 1245)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1245/1245_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1245/1245_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:53:40 CEST 2026  / 1778507620
+SETTING GPU CLOCKS TO GRAPHICS=1260
+GPU clocks set to "(gpuClkMin 1260, gpuClkMax 1260)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1260/1260_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1260/1260_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:55:05 CEST 2026  / 1778507705
+SETTING GPU CLOCKS TO GRAPHICS=1275
+GPU clocks set to "(gpuClkMin 1275, gpuClkMax 1275)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1275/1275_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1275/1275_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:56:29 CEST 2026  / 1778507789
+SETTING GPU CLOCKS TO GRAPHICS=1290
+GPU clocks set to "(gpuClkMin 1290, gpuClkMax 1290)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1290/1290_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1290/1290_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:57:52 CEST 2026  / 1778507872
+SETTING GPU CLOCKS TO GRAPHICS=1305
+GPU clocks set to "(gpuClkMin 1305, gpuClkMax 1305)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1305/1305_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1305/1305_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 15:59:15 CEST 2026  / 1778507955
+SETTING GPU CLOCKS TO GRAPHICS=1320
+GPU clocks set to "(gpuClkMin 1320, gpuClkMax 1320)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1320/1320_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1320/1320_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 16:00:36 CEST 2026  / 1778508036
+SETTING GPU CLOCKS TO GRAPHICS=1335
+GPU clocks set to "(gpuClkMin 1335, gpuClkMax 1335)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1335/1335_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1335/1335_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 16:01:56 CEST 2026  / 1778508116
+SETTING GPU CLOCKS TO GRAPHICS=1350
+GPU clocks set to "(gpuClkMin 1350, gpuClkMax 1350)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1350/1350_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1350/1350_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 16:03:16 CEST 2026  / 1778508196
+SETTING GPU CLOCKS TO GRAPHICS=1365
+GPU clocks set to "(gpuClkMin 1365, gpuClkMax 1365)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1365/1365_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1365/1365_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 16:04:35 CEST 2026  / 1778508275
+SETTING GPU CLOCKS TO GRAPHICS=1380
+GPU clocks set to "(gpuClkMin 1380, gpuClkMax 1380)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1380/1380_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1380/1380_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 16:05:55 CEST 2026  / 1778508355
+SETTING GPU CLOCKS TO GRAPHICS=1395
+GPU clocks set to "(gpuClkMin 1395, gpuClkMax 1395)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1395/1395_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1395/1395_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 16:07:14 CEST 2026  / 1778508434
+SETTING GPU CLOCKS TO GRAPHICS=1410
+GPU clocks set to "(gpuClkMin 1410, gpuClkMax 1410)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1410/1410_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1410/1410_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 16:08:33 CEST 2026  / 1778508513
+SETTING GPU CLOCKS TO GRAPHICS=1425
+GPU clocks set to "(gpuClkMin 1425, gpuClkMax 1425)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1425/1425_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1425/1425_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 16:09:52 CEST 2026  / 1778508592
+SETTING GPU CLOCKS TO GRAPHICS=1440
+GPU clocks set to "(gpuClkMin 1440, gpuClkMax 1440)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1440/1440_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1440/1440_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 16:11:12 CEST 2026  / 1778508672
+SETTING GPU CLOCKS TO GRAPHICS=1455
+GPU clocks set to "(gpuClkMin 1455, gpuClkMax 1455)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1455/1455_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1455/1455_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 16:12:31 CEST 2026  / 1778508751
+SETTING GPU CLOCKS TO GRAPHICS=1470
+GPU clocks set to "(gpuClkMin 1470, gpuClkMax 1470)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1470/1470_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1470/1470_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 16:13:51 CEST 2026  / 1778508831
+SETTING GPU CLOCKS TO GRAPHICS=1485
+GPU clocks set to "(gpuClkMin 1485, gpuClkMax 1485)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1485/1485_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1485/1485_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 16:15:10 CEST 2026  / 1778508910
+SETTING GPU CLOCKS TO GRAPHICS=1500
+GPU clocks set to "(gpuClkMin 1500, gpuClkMax 1500)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1500/1500_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1500/1500_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 16:16:29 CEST 2026  / 1778508989
+SETTING GPU CLOCKS TO GRAPHICS=1515
+GPU clocks set to "(gpuClkMin 1515, gpuClkMax 1515)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1515/1515_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1515/1515_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 16:17:49 CEST 2026  / 1778509069
+SETTING GPU CLOCKS TO GRAPHICS=1530
+GPU clocks set to "(gpuClkMin 1530, gpuClkMax 1530)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1530/1530_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1530/1530_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 16:19:08 CEST 2026  / 1778509148
+SETTING GPU CLOCKS TO GRAPHICS=1545
+GPU clocks set to "(gpuClkMin 1545, gpuClkMax 1545)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1545/1545_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1545/1545_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 16:20:27 CEST 2026  / 1778509227
+SETTING GPU CLOCKS TO GRAPHICS=1560
+GPU clocks set to "(gpuClkMin 1560, gpuClkMax 1560)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1560/1560_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1560/1560_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 16:21:46 CEST 2026  / 1778509306
+SETTING GPU CLOCKS TO GRAPHICS=1575
+GPU clocks set to "(gpuClkMin 1575, gpuClkMax 1575)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1575/1575_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1575/1575_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 16:23:05 CEST 2026  / 1778509385
+SETTING GPU CLOCKS TO GRAPHICS=1590
+GPU clocks set to "(gpuClkMin 1590, gpuClkMax 1590)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1590/1590_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1590/1590_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 16:24:24 CEST 2026  / 1778509464
+SETTING GPU CLOCKS TO GRAPHICS=1605
+GPU clocks set to "(gpuClkMin 1605, gpuClkMax 1605)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1605/1605_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1605/1605_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 16:25:44 CEST 2026  / 1778509544
+SETTING GPU CLOCKS TO GRAPHICS=1620
+GPU clocks set to "(gpuClkMin 1620, gpuClkMax 1620)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1620/1620_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1620/1620_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 16:27:03 CEST 2026  / 1778509623
+SETTING GPU CLOCKS TO GRAPHICS=1635
+GPU clocks set to "(gpuClkMin 1635, gpuClkMax 1635)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1635/1635_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1635/1635_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 16:28:22 CEST 2026  / 1778509702
+SETTING GPU CLOCKS TO GRAPHICS=1650
+GPU clocks set to "(gpuClkMin 1650, gpuClkMax 1650)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1650/1650_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1650/1650_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 16:29:41 CEST 2026  / 1778509781
+SETTING GPU CLOCKS TO GRAPHICS=1665
+GPU clocks set to "(gpuClkMin 1665, gpuClkMax 1665)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1665/1665_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1665/1665_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 16:31:01 CEST 2026  / 1778509861
+SETTING GPU CLOCKS TO GRAPHICS=1680
+GPU clocks set to "(gpuClkMin 1680, gpuClkMax 1680)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1680/1680_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1680/1680_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 16:32:20 CEST 2026  / 1778509940
+SETTING GPU CLOCKS TO GRAPHICS=1695
+GPU clocks set to "(gpuClkMin 1695, gpuClkMax 1695)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1695/1695_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1695/1695_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 16:33:39 CEST 2026  / 1778510019
+SETTING GPU CLOCKS TO GRAPHICS=1710
+GPU clocks set to "(gpuClkMin 1710, gpuClkMax 1710)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1710/1710_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1710/1710_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 16:34:58 CEST 2026  / 1778510098
+SETTING GPU CLOCKS TO GRAPHICS=1725
+GPU clocks set to "(gpuClkMin 1725, gpuClkMax 1725)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1725/1725_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1725/1725_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 16:36:17 CEST 2026  / 1778510177
+SETTING GPU CLOCKS TO GRAPHICS=1740
+GPU clocks set to "(gpuClkMin 1740, gpuClkMax 1740)" for GPU 00000000:41:00.0
+All done.
+Nvidia Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1740/1740_powerlog.csv
+FIRESTARTER Log: /home/hpc/unrz/unrz104h/Projects/CPU-GPU-Energy-Study/FIRESTARTER-A40-frequency/1740/1740_pid-411820.fsout
+Warning: AMD Family 25, Model 1, Stepping 1 is not supported by this version of FIRESTARTER!
+Check project website for updates.
+Warning: Using function FUNC_HSW_COREI_FMA_1T as fallback.
+You can use the parameter --function to try other functions.
+End: Mon May 11 16:37:37 CEST 2026  / 1778510257
+Resetting clocks...
+All done.
+Done!

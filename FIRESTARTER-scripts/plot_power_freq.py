@@ -107,15 +107,29 @@ def parse_run(csv_path, log_path, arch, is_freq, value):
 
     # parse GFLOPS from firestarter log:
     with open(log_path, "r") as log_file:
-        #gflops = -1
-        gflops = 0
+        dgflops = -1
+        sgflops = -1
         for line in log_file:
-            m = re.fullmatch("^.*GPU.*: ((?:0|[1-9]\\d*)(?:\\.\\d+)?) GFLOPS.*$", line.strip())
+            #m = re.fullmatch("^.*GPU.*: ((?:0|[1-9]\\d*)(?:\\.\\d+)?) GFLOPS.*$", line.strip())
+            m = re.fullmatch("^.*DGFLOPS=((?:0|[1-9]\\d*)(?:\\.\\d+)?)$", line.strip())
+            ok = False
             if m != None:
-                gflops = float(m[1])
+                dgflops = float(m[1])
+                ok = True
+            m = re.fullmatch("^SGFLOPS=((?:0|[1-9]\\d*)(?:\\.\\d+)?).*$", line.strip())
+            if m != None:
+                sgflops = float(m[1])
+                ok = True
+            if ok:
                 break
+        gflops = -1
+        if dgflops > 0:
+            gflops = dgflops
+        elif sgflops > 0:
+            gflops = sgflops
         if gflops < 0:
-            raise Exception("Unable to find GPU GFLOPS in file: {}".format(log_path))
+            #raise Exception("Unable to find GPU GFLOPS in file: {}".format(log_path))
+            print("Unable to find GPU GFLOPS in file: {}".format(log_path))
 
     if is_freq:
         frequency_results[arch][value] = Result(power_mu, gflops)
