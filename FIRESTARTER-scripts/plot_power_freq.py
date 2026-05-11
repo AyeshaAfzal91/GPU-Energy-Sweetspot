@@ -4,6 +4,7 @@ import csv
 import matplotlib.pyplot as plt
 import os
 import re
+import statistics
 import sys
 
 class Result:
@@ -73,8 +74,7 @@ def scan_firestarter_log(path):
 
 def parse_run(csv_path, log_path, arch, is_freq, value):
     # Parse nvidia-smi csv
-    power_sum = 0.0
-    power_iters = 0
+    power_values = []
     warmup_iters = 20
     with open(csv_path, "r") as f:
         rd = csv.reader(f)
@@ -93,11 +93,17 @@ def parse_run(csv_path, log_path, arch, is_freq, value):
                 warmup_iters -= 1
                 continue
 
-            power_sum += power_draw
-            power_iters += 1
+            power_values.append(power_draw)
 
-    if power_iters == 0:
+    if len(power_values) == 0:
         raise Exception("Not enough results in csv: {}", csv_path)
+
+    power_sigma = statistics.stdev(power_values)
+    if power_sigma > 10 and arch != "A100":
+        print("discarding result for architecture '{}' at {}, which has too high standard deviation: {}".format(arch, value, power_sigma))
+        return
+
+    power_mu = statistics.mean(power_values)
 
     # parse GFLOPS from firestarter log:
     with open(log_path, "r") as log_file:
@@ -112,9 +118,9 @@ def parse_run(csv_path, log_path, arch, is_freq, value):
             raise Exception("Unable to find GPU GFLOPS in file: {}".format(log_path))
 
     if is_freq:
-        frequency_results[arch][value] = Result(power_sum / power_iters, gflops)
+        frequency_results[arch][value] = Result(power_mu, gflops)
     else:
-        powercap_results[arch][value] = Result(power_sum / power_iters, gflops)
+        powercap_results[arch][value] = Result(power_mu, gflops)
 
 
 def create_power_plots():
