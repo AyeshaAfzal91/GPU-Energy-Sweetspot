@@ -163,20 +163,20 @@ def create_power_plots():
     for result in results:
         # draw power draw over powercap/freqcap
         plt.figure(figsize=(9, 6))
-        plt.xlabel(result["xlabel"])
-        plt.ylabel("Average GPU power draw [W]")
-        #plt.title("Avg GPU power draw vs {}".format(result["vs"]))
-        plt.legend(fontsize=8, ncol=2)
+        plt.xlabel(result["xlabel"], fontsize=16)
+        plt.ylabel("Average GPU power draw [W]", fontsize=16)
         plt.grid(True)
 
-        for arch_name, arch_dict in result["result"].items():
+        for arch_name, arch_dict in dict(sorted(result["result"].items())).items():
             xvalues = sorted(arch_dict)
             yvalues = [arch_dict[k].powerdraw for k in xvalues]
             plt.plot(xvalues, yvalues, marker="o", linestyle="-", linewidth=1, markersize=3, label=arch_name)
 
         plt.ylim(ymin=0)
         plt.xlim(xmin=0)
-        plt.legend()
+        plt.xticks(fontsize=16)
+        plt.yticks(fontsize=16)
+        plt.legend(fontsize=16)
 
         figure_dir = os.path.join(results_dir, "FIRESTARTER-plots")
         figure_path = os.path.join(figure_dir, "{}.svg".format(result["name"]))
@@ -186,10 +186,10 @@ def create_power_plots():
 
         # draw efficiency over performance
         plt.figure(figsize=(9, 6))
-        plt.xlabel("Performance [GFLOPS]")
-        plt.ylabel("Efficiency [GFLOPS / W]")
-        #plt.title("ABCD")
-        plt.legend(fontsize=8, ncol=2)
+        plt.xlabel("Performance [GFLOPS]", fontsize=16)
+        plt.ylabel("Efficiency [GFLOPS / W]", fontsize=16)
+        plt.xticks(fontsize=16)
+        plt.yticks(fontsize=16)
         plt.grid(True)
 
         labels = {
@@ -197,17 +197,20 @@ def create_power_plots():
                 "A40": Label(-4000, 7),
                 "A100": Label(-4000, 7),
                 "H100": Label(2000, 0),
-                "H200": Label(2000, 0),
+                "H200": Label(3000, 0),
             },
             "frequency": {
-                "A40": Label(2000, 2),
-                "A100": Label(-10000, 5),
+                "A40": Label(4000, 2),
+                "A100": Label(-10000, 7),
                 "H100": Label(2000, 0),
-                "H200": Label(-3000, -20),
+                "H200": Label(-14000, -2),
             },
         }
 
-        for arch_name, arch_dict in result["result"].items():
+        for arch_name, arch_dict in dict(sorted(result["result"].items())).items():
+            if arch_name == "H100":
+                continue
+
             keys = sorted(arch_dict)
             xvalues = [arch_dict[k].gflops for k in keys]
             yvalues = [arch_dict[k].gflops / arch_dict[k].powerdraw for k in keys]
@@ -222,12 +225,12 @@ def create_power_plots():
                 xy=(xmax, ymax),
                 xytext=(xmax + l.xoff, ymax + l.yoff),
                 arrowprops=dict(arrowstyle='->', lw=2),
-                fontsize=12,
+                fontsize=16,
             )
 
         plt.ylim(ymin=0)
         plt.xlim(xmin=0)
-        plt.legend()
+        plt.legend(fontsize=16)
         figure_path = os.path.join(figure_dir, "{}-efficiency.svg".format(result["name"]))
         plt.savefig(figure_path, dpi=300, bbox_inches="tight")
         plt.close()
