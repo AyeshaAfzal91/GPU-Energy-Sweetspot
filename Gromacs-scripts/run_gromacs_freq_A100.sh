@@ -1,14 +1,15 @@
 #!/bin/bash -l
-#SBATCH --job-name=freqH100
+#SBATCH --job-name=freqA100
 #SBATCH --nodes=1
-#SBATCH --gres=gpu:h100:1
-#SBATCH --reservation=powercapped-ihpc161h-h100
 #SBATCH --time=24:00:00
-##### SBATCH --output=FreqA100-%j.out
-#SBATCH --export=ALL
+#SBATCH --reservation=powercapped-ihpc161h-a100
+#SBATCH --gres=gpu:a100:1
+#SBATCH --partition=a100
+#SBATCH -C el8
+#SBATCH --output=FreqA100-%j.out
 
 # === Load modules ===
-module load gromacs/2025.2-mkl-cuda12 #for helma 
+module load gromacs/2024.4-gcc11.2.0-mkl-cuda # for alex
 
 # === GROMACS GPU environment settings ===
 export GMX_GPU_PME_DECOMPOSITION=1
@@ -20,15 +21,16 @@ export NSTEPS=200000
 export OPTIONS="-maxh 0.2 -ntomp 16 -bonded gpu -update gpu -pme gpu -nb gpu -ntmpi 1 -pin on -pinstride 1"
 export INPUTFILE_LOCATION="/home/hpc/ihpc/ihpc161h/GROMACS-BAthesis/inputs/"
 
-for ((J=1845; J<=2054; J+=75)); do
-if (( J > 1980 )); then 
-	echo "edge case 1980"
-	J=1980
+for ((J=210; J<=1454; J+=45)); do
+if (( J > 1410)); then 
+	echo "edge case 1410"
+	J=1410
 fi
+
 # === Parse GPU clock settings ===
-GPU_MEM_CLOCK="1593"
+GPU_MEM_CLOCK="1251"
 GPU_GRAPHICS_CLOCK="$J"
-FREQ_TAG="1593-${GPU_GRAPHICS_CLOCK}"
+FREQ_TAG="1215-${GPU_GRAPHICS_CLOCK}"
 
 # === Setup output directory ===
 DATE=$(date +%Y%m%d)

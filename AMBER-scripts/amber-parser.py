@@ -52,13 +52,14 @@ def avg_power_from_powerlog(path, util_thr=85.0):
     return (sum(vals) / len(vals)) if vals else None
 
 def find_mdout(run_dir, bench, arch):
-    pat = re.compile(rf"^{re.escape(bench)}_{re.escape(arch)}\..*\.mdout$", re.IGNORECASE)
-    for fn in os.listdir(run_dir):
-        if pat.match(fn): return os.path.join(run_dir, fn)
+    bench_prefix = f"{bench}_".lower()
+    
     for fn in os.listdir(run_dir):
         low = fn.lower()
-        if low.endswith(".mdout") and bench.lower() in low and arch.lower() in low:
+        # Simply check if the file starts with "BenchmarkName_" and ends with ".mdout"
+        if low.startswith(bench_prefix) and low.endswith(".mdout"):
             return os.path.join(run_dir, fn)
+            
     return None
 
 def parse_nsday_from_mdout(mdout_path, min_last_steps=76000):
@@ -79,6 +80,19 @@ def get_atom_count(bench_name):
     if bench_name in ATOM_COUNTS: return ATOM_COUNTS[bench_name]
     for key, val in ATOM_COUNTS.items():
         if bench_name.lower() == key.lower(): return val
+    return None
+
+def get_power_limit(arch, run_type, row):
+    if run_type == "powercap":
+        return float(row["powercap_w"])
+    
+    # Bulletproof check: Look for the GPU name anywhere inside the arch string
+    arch_upper = arch.upper()
+    if "H200" in arch_upper: return 700
+    if "H100" in arch_upper: return 500
+    if "A100" in arch_upper: return 400
+    if "A40" in arch_upper: return 300
+    
     return None
 
 # ==========================================
@@ -154,6 +168,16 @@ def load_or_parse_data(clean_cache):
     df.to_csv(CSV_CACHE, index=False)
     print(f"✅ Data parsed and cached to {CSV_CACHE}")
     return df
+
+# Set global font sizes for all plots
+plt.rcParams.update({
+    'font.size': 18,          # General/default text sizes
+    'axes.labelsize': 18,     # X and Y axis labels
+    'xtick.labelsize': 16,    # X axis tick marks (the numbers)
+    'ytick.labelsize': 16,    # Y axis tick marks (the numbers)
+    'legend.fontsize': 18,    # Legend text
+    'axes.titlesize': 18# Plot titles
+})
 
 # ==========================================
 # MAIN SCRIPT
@@ -254,6 +278,10 @@ if __name__ == "__main__":
             #plt.title(f"GPU Z-plot: Power vs Performance — {arch}")
             plt.ylim(ymin=0)
             plt.xlim(xmin=0)
+            handles, labels = plt.gca().get_legend_handles_labels()
+            sorted_pairs = sorted(zip(handles, labels), key=lambda x: ATOM_COUNTS.get(x[1], 0))
+            sorted_handles, sorted_labels = zip(*sorted_pairs)
+            plt.legend(handles=sorted_handles, labels=sorted_labels, fontsize=12, loc='upper left')
             plt.legend(fontsize=8, ncol=2)
             plt.savefig(os.path.join(OUTDIR, f"{arch}_gpu_zplot_normal.png"), dpi=300, bbox_inches="tight")
             plt.close()
@@ -329,7 +357,7 @@ if __name__ == "__main__":
                     t = plt.annotate(
                         eff_label, xy=(eff_perf, eff_eff), 
                         xytext=(eff_perf, eff_eff + y_bias), # Spawn basically on top of the dot
-                        ha='center', va='center', fontsize=10, 
+                        ha='center', va='center', fontsize=14, 
                         color=line_color, bbox=bbox_props, arrowprops=arrow_props 
                     )
                     texts.append(t)
@@ -338,7 +366,7 @@ if __name__ == "__main__":
                     t1 = plt.annotate(
                         eff_label, xy=(eff_perf, eff_eff), 
                         xytext=(eff_perf, eff_eff + y_bias), 
-                        ha='center', va='center', fontsize=10, 
+                        ha='center', va='center', fontsize=14, 
                         color=line_color, bbox=bbox_props, arrowprops=arrow_props 
                     )
                     texts.append(t1)
@@ -347,7 +375,7 @@ if __name__ == "__main__":
                     t2 = plt.annotate(
                         edp_label, xy=(opt_perf, opt_eff), 
                         xytext=(opt_perf, opt_eff + y_bias), 
-                        ha='center', va='center', fontsize=10, 
+                        ha='center', va='center', fontsize=14, 
                         color=line_color, bbox=bbox_props, arrowprops=arrow_props 
                     )
                     texts.append(t2)
@@ -372,7 +400,7 @@ if __name__ == "__main__":
             marker_both = Line2D([0], [0], marker='D', color='w', markerfacecolor='black', markersize=6, label='Coincide')
             sorted_handles.extend([marker_max, marker_edp, marker_both])
             
-            my_legend = plt.legend(handles=sorted_handles, fontsize=9, ncol=2, loc='lower right')
+            my_legend = plt.legend(handles=sorted_handles, fontsize=12, ncol=2, loc='lower right')
             
             # ==========================================
             # 2. TAMED AUTO-ADJUSTER (The Point Cloud Method)
@@ -417,11 +445,15 @@ if __name__ == "__main__":
                 plt.plot(s[x_col], s["avg_power_w"], marker="o", linestyle="-", linewidth=1, markersize=3, label=bench)
                 
             plt.xlabel(x_label)
-            plt.ylabel("Average GPU Power [W]")
+            plt.ylabel("Average GPU Power draw [W]")
             #plt.title(f"Avg GPU Power vs {'Graphics frequency' if is_freq else 'Power cap'} — {arch}")
             plt.ylim(ymin=0)
             plt.xlim(xmin=0)
-            plt.legend(fontsize=8, ncol=2)
+            handles, labels = plt.gca().get_legend_handles_labels()
+            sorted_pairs = sorted(zip(handles, labels), key=lambda x: ATOM_COUNTS.get(x[1], 0))
+            sorted_handles, sorted_labels = zip(*sorted_pairs)
+            plt.legend(handles=sorted_handles, labels=sorted_labels, fontsize=12, ncol=2)
+            #plt.legend(fontsize=12, ncol=2)
             plt.grid(True)
             plt.ylim(ymin=0)
             plt.savefig(os.path.join(OUTDIR, f"{arch}_avgpower_vs_limits.png"), dpi=300, bbox_inches="tight")
@@ -464,7 +496,7 @@ if __name__ == "__main__":
     # 6) Piecewise Power Modeling (Linear -> Quadratic)
     # ----------------------------
     if args.all or args.model_power:
-        print("Generating Piecewise Power Models (Linear -> Quadratic )...")
+        print("Generating Piecewise Power Models (Linear -> Quadratic)...")
         
         df_freq = df[df["run_type"] == "frequency"]
         
@@ -483,23 +515,28 @@ if __name__ == "__main__":
                     x_data = ssub["gfx_freq_mhz"].to_numpy()
                     y_data = ssub["avg_power_w"].to_numpy()
 
+                    # 1. Determine the hard physical limit ONCE for this benchmark
+                    P_max = get_power_limit(arch, ssub["run_type"].iloc[0], ssub.iloc[0])
+                    
+                    if P_max is None:
+                        print(f" -> Skipping {bench}: no power limit available for {arch}")
+                        continue
+
                     # Plot the raw empirical data points
                     p = plt.plot(x_data, y_data, marker="o", linestyle="", alpha=0.5)
                     color = p[0].get_color()
-
-                    # Find the physical hardware saturation limit (max recorded power)
-                    # We add a tiny 0.1W buffer so the math doesn't clip the highest empirical dot awkwardly
-                    pwr_limit = y_data.max() + 0.1
 
                     # Define the two mathematical models
                     def lin_model(x, m, c):
                         return m * x + c
                         
-                    def poly_capped_model(x, a, b, c):
-                        # Calculate the raw quadratic polynomial growth
-                        raw_poly = a * (x**2) + b * x + c
-                        # Cap the output at the hardware's maximum power limit
-                        return raw_poly
+                    def poly_capped_model(x, a, b, c, pwr_limit):
+                        raw = a * x**2 + b * x + c
+                        return np.minimum(raw, pwr_limit)
+
+                    # Wrap the model to lock in P_max for curve_fit
+                    def poly_model_wrapped(x, a, b, c):
+                        return poly_capped_model(x, a, b, c, P_max)
 
                     best_sse = float('inf')
                     best_split_idx = -1
@@ -510,22 +547,34 @@ if __name__ == "__main__":
                         x_lin, y_lin = x_data[:i], y_data[:i]
                         x_poly, y_poly = x_data[i-1:], y_data[i-1:] 
                         
+                        # --- FIT LINEAR ---
                         try:
                             lin_popt, _ = curve_fit(lin_model, x_lin, y_lin)
                             sse_lin = np.sum((y_lin - lin_model(x_lin, *lin_popt))**2)
+                        except RuntimeError:
+                            continue
                             
-                            # Polynomial initial guesses: a (tiny), b (small), c (baseline power)
-                            poly_popt, _ = curve_fit(poly_capped_model, x_poly, y_poly, p0=[1e-5, 1e-2, min(y_poly)], maxfev=5000)
-                            sse_poly = np.sum((y_poly - poly_capped_model(x_poly, *poly_popt))**2)
-                            
-                            if sse_lin + sse_poly < best_sse:
-                                best_sse = sse_lin + sse_poly
-                                best_split_idx = i
-                                best_lin_popt = lin_popt
-                                best_poly_popt = poly_popt
+                        # --- FIT POLYNOMIAL ---
+                        try:
+                            poly_popt, _ = curve_fit(
+                                poly_model_wrapped, 
+                                x_poly, 
+                                y_poly, 
+                                p0=[1e-5, 1e-2, min(y_poly)], 
+                                maxfev=5000
+                            )
+                            sse_poly = np.sum((y_poly - poly_model_wrapped(x_poly, *poly_popt))**2)
                         except RuntimeError:
                             continue
 
+                        # --- COMPARE ---
+                        if sse_lin + sse_poly < best_sse:
+                            best_sse = sse_lin + sse_poly
+                            best_split_idx = i
+                            best_lin_popt = lin_popt
+                            best_poly_popt = poly_popt
+
+                    # Plotting the best fit
                     if best_split_idx != -1:
                         split_freq = x_data[best_split_idx - 1]
                         
@@ -536,17 +585,19 @@ if __name__ == "__main__":
                         x_smooth_lin = np.linspace(x_data.min(), split_freq, 50)
                         x_smooth_poly = np.linspace(split_freq, x_data.max(), 100)
                         
-                        # Plot the solid linear line and dashed polynomial line
+                        # Draw Linear Line
                         plt.plot(x_smooth_lin, lin_model(x_smooth_lin, *best_lin_popt), linestyle="--", color=color, linewidth=2)
-                        plt.plot(x_smooth_poly, poly_capped_model(x_smooth_poly, *best_poly_popt), linestyle="--", color=color, linewidth=2)
+                        
+                        # Draw Poly Line (capped at P_max)
+                        y_poly_smooth = poly_capped_model(x_smooth_poly, *best_poly_popt, P_max)
+                        plt.plot(x_smooth_poly, y_poly_smooth, linestyle="--", color=color, linewidth=2)
                         
                         # Calculate Deviation (RMSE)
                         rmse = np.sqrt(best_sse / len(x_data))
                         
-                        # Format the equations to clearly show the min() limit
-                        # We use scientific notation (.2e) for a and b because they are usually very small decimals
+                        # Format the equations
                         lin_eq = f"Lin (f \u2264 {split_freq}): P = {m:.3f}f {intercept:+.1f}"
-                        poly_eq = f"Poly (f > {split_freq}): P = min({a:.2e}f\u00b2 {b:+.2e}f {c:+.1f}, {pwr_limit:.1f})"
+                        poly_eq = f"Poly (f > {split_freq}): P = min({a:.2e}f\u00b2 {b:+.2e}f {c:+.1f}, {P_max:.1f})"
                         err_text = f"Deviation: \u00B1{rmse:.2f} W"
                         
                         label_text = f"{bench}\n  {lin_eq}\n  {poly_eq}\n  {err_text}"
@@ -554,17 +605,17 @@ if __name__ == "__main__":
                     else:
                         print(f" -> Warning: Piecewise fit failed to converge for {bench}")
 
-                plt.xlabel("Graphics frequency (MHz)")
-                plt.ylabel("Average GPU Power (W)")
-                #plt.title(f"Piecewise Power Modeling — {arch}")
-                plt.ylim(ymin=0)
+                plt.xlabel("Graphics frequency [MHz]")
+                plt.ylabel("Average GPU Power draw [W]")
                 plt.xlim(xmin=0)
+                plt.ylim(ymin=0)
                 
                 if custom_handles:
-                    plt.legend(handles=custom_handles, fontsize=8, bbox_to_anchor=(1.02, 1), loc='upper left')
+                    custom_handles = sorted(custom_handles, key=lambda h: ATOM_COUNTS.get(h.get_label().split('\n')[0], 0))
+                    #plt.legend(handles=custom_handles, fontsize=8, bbox_to_anchor=(1.02, 1), loc='upper left')
+                    plt.legend(handles=custom_handles, fontsize=9, bbox_to_anchor=(1.02, 1), loc='upper left')
                 
                 plt.grid(True, linestyle=":", alpha=0.7)
-                plt.ylim(ymin=0)
                 plt.savefig(os.path.join(OUTDIR, f"{arch}_power_model_piecewise.png"), dpi=300, bbox_inches="tight")
                 plt.close()
         else:

@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH --job-name=freqH100
+#SBATCH --job-name=capH100
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:h100:1
 #SBATCH --reservation=powercapped-ihpc161h-h100
@@ -20,19 +20,16 @@ export NSTEPS=200000
 export OPTIONS="-maxh 0.2 -ntomp 16 -bonded gpu -update gpu -pme gpu -nb gpu -ntmpi 1 -pin on -pinstride 1"
 export INPUTFILE_LOCATION="/home/hpc/ihpc/ihpc161h/GROMACS-BAthesis/inputs/"
 
-for ((J=1845; J<=2054; J+=75)); do
-if (( J > 1980 )); then 
-	echo "edge case 1980"
-	J=1980
+for ((J=200; J<=700; J+=20)); do 
+POWER_LIMIT=$J
+if (( J > 700)); then
+  echo "edge case for over 700"
+  POWER_LIMIT=700
 fi
-# === Parse GPU clock settings ===
-GPU_MEM_CLOCK="1593"
-GPU_GRAPHICS_CLOCK="$J"
-FREQ_TAG="1593-${GPU_GRAPHICS_CLOCK}"
 
 # === Setup output directory ===
 DATE=$(date +%Y%m%d)
-OUTDIR=/home/hpc/ihpc/ihpc161h/GROMACS-BAthesis/runs/$1/${FREQ_TAG}
+OUTDIR=/home/hpc/ihpc/ihpc161h/GROMACS-BAthesis/runs/$1/${POWER_LIMIT}
 mkdir -p $OUTDIR
 cd $OUTDIR
 
@@ -40,11 +37,8 @@ cd $OUTDIR
 BENCHMARKS=(2md_start0 FL_md1_berendsen PI_large_test eag1 rnanvt stmv_pme_nvt)
 
 # === Set GPU clocks ===
-echo "Setting GPU clocks to GRAPHICS=$GPU_GRAPHICS_CLOCK"
-sudo /usr/bin/nvidia-smi --lock-gpu-clocks="$GPU_GRAPHICS_CLOCK"
-
-# === Signal cleanup for power logging ===
-trap "kill 0" SIGINT SIGTERM EXIT
+echo "Setting GPU Powercap to ${POWER_LIMIT}"
+sudo /usr/bin/nvidia-smi --power-limit=${POWER_LIMIT}
 
 # === Run each benchmark ===
 for i in "${BENCHMARKS[@]}"; do
@@ -56,10 +50,10 @@ for i in "${BENCHMARKS[@]}"; do
     fi
     
     # Power logging
-    nvidia-smi -i $CUDA_VISIBLE_DEVICES --loop-ms=100 --query-gpu=timestamp,power.draw,utilization.gpu --format=csv > ${i}_${FREQ_TAG}_${HOSTNAME}_powerlog.csv & POWER_PID=$!
+    nvidia-smi -i $CUDA_VISIBLE_DEVICES --loop-ms=100 --query-gpu=timestamp,power.draw,utilization.gpu --format=csv > ${i}_${POWER_LIMIT}_${HOSTNAME}_powerlog.csv & POWER_PID=$!
 
     # Main GROMACS run
-    gmx mdrun -nsteps $NSTEPS $OPTIONS -s ${INPUTFILE_LOCATION}$i.tpr -deffnm ${i}_${FREQ_TAG}_${HOSTNAME}_perflog  -g ${i}_${FREQ_TAG}_${HOSTNAME}_perflog.log -gpu_id $CUDA_VISIBLE_DEVICES > ${i}_${FREQ_TAG}_${HOSTNAME}-${SLURM_JOB_ID}.out 2>&1 > ${i}_${FREQ_TAG}_${HOSTNAME}_perflog.stdout
+    gmx mdrun -nsteps $NSTEPS $OPTIONS -s ${INPUTFILE_LOCATION}$i.tpr -deffnm ${i}_${POWER_LIMIT}_${HOSTNAME}_perflog  -g ${i}_${POWER_LIMIT}_${HOSTNAME}_perflog.log -gpu_id $CUDA_VISIBLE_DEVICES > ${i}_${POWER_LIMIT}_${HOSTNAME}-${SLURM_JOB_ID}.out 2>&1 > ${i}_${POWER_LIMIT}_${HOSTNAME}_perflog.stdout
 
     echo "End: $(date) / $(date +%s)"
 
